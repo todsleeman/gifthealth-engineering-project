@@ -23,6 +23,8 @@ scope: the app plan starts with the spec's sample as its first acceptance test.
 | I10 | `@types/node@22`, `lib` ES2024, `target` ES2022 (the `@tsconfig/node22` settings, without the dependency) (Tod)                          | Typecheck rejects Node APIs and built-ins newer than the Node 22 floor, though Tod develops on 25. Checked by the compiler only; no Node 22 test run                            |
 | I11 | Tests in a separate `tests/` folder mirroring `src/` (Tod)                                                                               | Build config simply includes `src/`; the suite reads in one place                                                                                                               |
 
+I9 was amended by architecture plan A21 (2026-11-24): no unnecessary runtime dependencies; dinero.js approved.
+
 I4 and I10 are recorded together in the README's Design Tradeoffs section (step 6). The rest stay in this plan and AGENTS.md.
 
 ## Implementation steps (for the agent; Tod monitors)
