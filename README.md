@@ -59,13 +59,15 @@ npm run check
 
 ## Design Tradeoffs
 
+### Tooling
+
 - Compiled to JavaScript rather than run as TypeScript
-  - Runs on Node 22 with nothing extra installed. Running .ts directly needs Node 23.6 or tsx.
-  - The build catches type errors. Node's type stripping doesn't check them.
-  - npm ci builds dist/, so it isn't committed. The cost is a rebuild after each change.
-- Node 22 checked by the compiler, not by a test run
-  - Node types and the compiler's built-in library are pinned to Node 22, so code using anything added after Node 22 won't typecheck.
-  - The tests haven't been run on Node 22 itself. The CLI only uses fs, readline and process.
+  - Runs on Node 22 (current oldest LTS) with nothing extra installed. Running .ts directly needs Node 23.6 or tsx.
+  - Enforces a type check before the CLI can run.
+  - TypeScript is set to Node 22, so it flags anything Node 22 doesn't have.
+- `npm ci` instead of `npm install`
+  - Installs the exact versions in package-lock.json, so a reviewer gets what I tested.
+  - Also builds dist/ through prepare. If install scripts are turned off, run npm run build.
 
 ## Testing Strategy
 
