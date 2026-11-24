@@ -34,13 +34,25 @@ Module map and types: `docs/architecture.md`. Decisions (A1-A24), rejected optio
 `docs/plans/architecture.md`.
 
 - `src/types.ts` holds the domain types the core modules share, with the `EVENT_KINDS` list `EventKind` is built
-  from. Types for the I/O edge stay with the code that uses them (`ExitCode` in `cli.ts`). `Money` stays a class
-  in `money.ts`. It is `.ts`, not `.d.ts`, because `skipLibCheck` would skip checking a `.d.ts` (A24).
+  from. Types for the I/O edge stay with the code that uses them (`ExitCode` and `Io` in `app.ts`, `InputSource`
+  in `input.ts`). `Money` stays a class in `money.ts`. It is `.ts`, not `.d.ts`, because `skipLibCheck` would
+  skip checking a `.d.ts` (A24).
 - Money is a `Money` class around Dinero.js, whole US dollars only; nothing outside `money.ts` imports Dinero (A6, A7).
 - Report order is net fills descending, then name ascending (A10).
 - A malformed line, a second `created` or a return with no fill to cancel is skipped and listed on stderr with
   its line number; processing continues (A15-A17).
 - Exit codes: 0 complete, 1 report printed but lines rejected, 2 no report (A18).
+
+Function outline and the proposed decisions that resolved the architecture plan's deferred items (S1-S17):
+`docs/plans/scaffolding.md`. Proposed decisions need Tod's OK before the `scaffolding` branch is merged.
+
+- `src/cli.ts` is the entry point only. `run(args, io)` lives in `src/app.ts`, so tests import it and pass fake
+  streams. Don't import `cli.ts` in tests: importing it starts the CLI.
+- Every function starts as a stub whose TSDoc is its contract, and every test starts as an `it.todo` named after
+  the spec rule. The functionality plan turns each `it.todo` into a failing test, sees it fail, then implements
+  the stub until it passes.
+- Test files must not import `pharmacy.ts` before `Money` is implemented: its income constants call
+  `Money.dollars` when the module loads.
 
 ## Done means
 
