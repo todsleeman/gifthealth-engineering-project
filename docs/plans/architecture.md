@@ -208,3 +208,30 @@ Future Improvements (after the existing HTTP API bullet):
 - **Prices with cents or another currency.** Prices are whole US dollars today. Money is stored in cents through Dinero.js, so a price like $4.50 or a second currency is a change inside money.ts, plus a decision on how the report prints it.
 - **Sort option.** The report order is fixed (fills, then name). A flag such as --sort income would let a reader choose. It would be the first option the CLI takes, and the point to reconsider a small argument parser instead of reading process.argv by hand.
 - **State across runs.** Each run starts with no history, so the input must hold every event from each prescription's creation onwards. If events arrived in daily files, a prescription created yesterday and filled today would have today's fill discarded. A small database such as SQLite would keep prescriptions between runs, and it would sit naturally behind the HTTP API.
+
+## Outcome (2026-11-24)
+
+Done, on branch `architecture` (not pushed, not merged). All steps complete. Verified from a fresh clone of the
+branch: `npm ci` builds `dist/cli.js`, typecheck and lint are clean, `npx rx-report < /dev/null` exits 0, only
+`src/money.ts` imports `dinero.js`, and `npm test` exits 1 with "No test files found" as expected. README,
+AGENTS.md and `package.json` no longer mention `prescription-report` or `<command>`.
+
+Dinero.js 2.0.2 API, from its installed type definitions:
+
+- Value type `Dinero<TAmount, TCurrency extends string = string>`, so `Dinero<number>` works as planned.
+- Created with `dinero({ amount, currency, scale? })`; `add`, `subtract` and `multiply(d, n)` all exist;
+  `toSnapshot(d)` returns `{ amount, currency, scale }`; `isNegative` and `toUnits` are also available.
+- `USD` is exported from `dinero.js` itself as well as from `dinero.js/currencies`, so `money.ts` needs only one import.
+
+Changes from the plan:
+
+- `FILL_INCOME` and `RETURN_PENALTY` are exported, not module-private, because ESLint rejects unused private
+  constants until the rules that use them exist. The functionality plan can make them private again. They call the
+  `Money.dollars` stub, so importing `pharmacy.ts` throws until `Money` is implemented.
+- `Money.zero` is a static getter, so it can be a stub.
+- `eslint.config.js` gained `argsIgnorePattern: "^_"` for the stub parameters, as the plan allowed.
+- Installing Dinero.js also let npm drop two optional dev-only lockfile entries (`@emnapi/core`, `@emnapi/runtime`).
+- The settled output-order memory was moved to the memory folder's `_quarantine_2026-11-24/`, not deleted.
+- README Project Structure lists `tests/`, which the functionality plan creates.
+
+Still deferred: everything under "Deferred to the functionality plan" above, starting with the acceptance test.
