@@ -15,7 +15,7 @@ stop and ask.
 - Typecheck: `npm run typecheck`
 - Lint and format check: `npm run lint` (fix formatting with `npm run format`)
 - Test: `npm test`
-- Run: `node dist/cli.js <file>` or `cat <file> | node dist/cli.js` (rebuild first)
+- Run: `npx rx-report <file>` or `cat <file> | npx rx-report` (or `node dist/cli.js`; rebuild first)
 
 ## Toolchain
 
@@ -25,7 +25,22 @@ Decisions and reasons: `docs/plans/infrastructure.md`.
 - Tests use Vitest (chosen over Jest: native TypeScript and ESM), in `tests/` mirroring `src/`.
 - ESM with NodeNext: relative imports end in `.js`.
 - Supported floor is Node 22: `@types/node` stays on 22 and `lib` on ES2024, so newer APIs fail typecheck.
-- No runtime dependencies.
+- No unnecessary runtime dependencies: each needs Tod's OK and a README reason. The only one is
+  dinero.js, imported only by `src/money.ts`.
+
+## Architecture
+
+Module map and types: `docs/architecture.md`. Decisions (A1-A24), rejected options and what is deferred:
+`docs/plans/architecture.md`.
+
+- `src/types.ts` holds the domain types the core modules share, with the `EVENT_KINDS` list `EventKind` is built
+  from. Types for the I/O edge stay with the code that uses them (`ExitCode` in `cli.ts`). `Money` stays a class
+  in `money.ts`. It is `.ts`, not `.d.ts`, because `skipLibCheck` would skip checking a `.d.ts` (A24).
+- Money is a `Money` class around Dinero.js, whole US dollars only; nothing outside `money.ts` imports Dinero (A6, A7).
+- Report order is net fills descending, then name ascending (A10).
+- A malformed line, a second `created` or a return with no fill to cancel is skipped and listed on stderr with
+  its line number; processing continues (A15-A17).
+- Exit codes: 0 complete, 1 report printed but lines rejected, 2 no report (A18).
 
 ## Done means
 
@@ -38,7 +53,6 @@ Typecheck clean, tests pass, and the sample in the spec produces its expected ou
 - Design decisions and their reasons live in the README. Don't change module boundaries or the
   data model without asking.
 - Tests are named after the spec rule they check; write the test first and see it fail.
-- README reasoning sections are Tod's writing: suggest, don't write.
 
 ## Commit messages
 
