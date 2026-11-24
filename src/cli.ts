@@ -1,13 +1,8 @@
 #!/usr/bin/env node
+import { run } from "./app.js";
 
-export const ExitCode = {
-  Success: 0,
-  LinesRejected: 1,
-  NoReport: 2,
-} as const;
-
-export type ExitCode = (typeof ExitCode)[keyof typeof ExitCode];
-
-function main(): void {}
-
-main();
+process.exitCode = await run(process.argv.slice(2), {
+  stdin: process.stdin,
+  stdout: process.stdout,
+  stderr: process.stderr,
+});
