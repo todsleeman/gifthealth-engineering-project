@@ -86,3 +86,19 @@ typescript-eslint prettier eslint-config-prettier`? Versions will be the current
 - `npm start` runs the stub and exits 0.
 - `npm test` starts Vitest. It reports no test files and exits non-zero, which is expected until the app
   plan adds the first test.
+
+## Outcome (2026-11-23)
+
+Done. All steps complete; verified from a fresh clone (`npm ci` builds `dist/cli.js`, typecheck and lint
+clean, stub exits 0, `npm test` exits 1 with no test files as expected). A probe file confirmed the Node 22
+pin: `RegExp.escape` (ES2025) fails typecheck, `Object.groupBy` (ES2024) passes.
+
+Installed versions: typescript 6.0.3, vitest 4.1.12, @types/node 22.20.5, eslint 10.15.0, @eslint/js 10.0.1,
+typescript-eslint 8.74.0, prettier 3.10.1, eslint-config-prettier 10.1.8.
+
+Changes from the plan:
+
+- The README tradeoff entry is Tod's short bullet list, not the drafted paragraphs.
+- `.gitignore` also ignores `node_modules/`; `.prettierignore` also skips `package-lock.json` and the brief.
+
+Still open, outside this plan: the report's output order, and whether the submission zip ships git history.
