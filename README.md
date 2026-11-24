@@ -26,6 +26,13 @@ npm run build
 
 ### Usage
 
+From the project folder, after installing:
+
+```sh
+npx <command> events.txt
+cat events.txt | npx <command>
+```
+
 ## Running Tests
 
 ```sh

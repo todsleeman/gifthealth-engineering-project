@@ -18,8 +18,7 @@
     "format": "prettier --write .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "check": "npm run typecheck && npm run lint && npm test",
-    "start": "node dist/cli.js"
+    "check": "npm run typecheck && npm run lint && npm test"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
