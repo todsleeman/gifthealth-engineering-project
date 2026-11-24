@@ -29,9 +29,19 @@ npm run build
 From the project folder, after installing:
 
 ```sh
-npx <command> events.txt
-cat events.txt | npx <command>
+npx rx-report events.txt
+cat events.txt | npx rx-report
 ```
+
+The report goes to stdout. Any line that couldn't be used is listed on stderr with its line number.
+
+#### Exit codes
+
+| Code | Meaning                                                                                        |
+| ---- | ---------------------------------------------------------------------------------------------- |
+| 0    | Every line was valid and the report is complete                                                |
+| 1    | The report was printed, but some lines were rejected and skipped. Each one is listed on stderr |
+| 2    | No report was printed. The command was used wrongly or the input couldn't be read              |
 
 ## Running Tests
 
