@@ -1,11 +1,11 @@
 {
-  "name": "prescription-report",
+  "name": "rx-report",
   "version": "1.0.0",
   "description": "Reads pharmacy prescription events and prints fills and income per patient",
   "private": true,
   "type": "module",
   "bin": {
-    "prescription-report": "dist/cli.js"
+    "rx-report": "dist/cli.js"
   },
   "engines": {
     "node": ">=22"
