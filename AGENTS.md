@@ -9,7 +9,23 @@ stop and ask.
 
 ## Commands
 
-To be filled in once the toolchain is chosen: install, typecheck, test, run on the sample.
+- Install (also builds): `npm ci`
+- Build: `npm run build`
+- Everything below at once: `npm run check`
+- Typecheck: `npm run typecheck`
+- Lint and format check: `npm run lint` (fix formatting with `npm run format`)
+- Test: `npm test`
+- Run: `node dist/cli.js <file>` or `cat <file> | node dist/cli.js` (rebuild first)
+
+## Toolchain
+
+Decisions and reasons: `docs/plans/infrastructure.md`.
+
+- Build output is `dist/`, gitignored, built by `prepare` on install.
+- Tests use Vitest (chosen over Jest: native TypeScript and ESM), in `tests/` mirroring `src/`.
+- ESM with NodeNext: relative imports end in `.js`.
+- Supported floor is Node 22: `@types/node` stays on 22 and `lib` on ES2024, so newer APIs fail typecheck.
+- No runtime dependencies.
 
 ## Done means
 
