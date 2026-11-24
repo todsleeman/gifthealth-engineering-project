@@ -9,19 +9,19 @@ scope: the app plan starts with the spec's sample as its first acceptance test.
 
 ## Decisions made
 
-| # | Decision | Why |
-|---|----------|-----|
-| I1 | TypeScript, `strict` plus `noUncheckedIndexedAccess`, `verbatimModuleSyntax` | Catches missing map lookups and other undefined values at compile time |
-| I2 | Tests on **Vitest**, not Jest (Tod, 2026-11-23) | Runs TypeScript and ESM natively, no `ts-jest` adapter, same `describe`/`it`/`expect` API |
-| I3 | Native ESM: `"type": "module"`, `module`/`moduleResolution` `NodeNext` | No CommonJS workaround needed once Jest is gone; relative imports carry `.js` extensions |
-| I4 | Compile with `tsc` to `dist/` (`bin` → `dist/cli.js`); `dist/` gitignored and built by a `prepare` script | Plain JavaScript runs on any LTS Node, where running `.ts` directly needs Node ≥ 23.6 or a `tsx` dependency; npm runs `prepare` on `npm ci`, so one command installs and builds |
-| I5 | `engines.node` `>=22` | Oldest LTS line still supported; Tod develops on Node 25 |
-| I6 | ESLint (flat config, `typescript-eslint` recommended, type-checked) + Prettier, with `eslint-config-prettier` so they don't fight | Hygiene is graded; one `npm run lint` checks both |
-| I7 | Two tsconfigs: `tsconfig.json` (src + tests, `noEmit`, for typecheck and the editor) and `tsconfig.build.json` (src only, emits `dist/`) | Tests stay out of the build |
-| I8 | Plans in `docs/plans/` ship with the submission | They show the process |
-| I9 | No runtime dependencies | One file argument or stdin doesn't justify an argument parser |
-| I10 | `@types/node@22`, `lib` ES2024, `target` ES2022 (the `@tsconfig/node22` settings, without the dependency) (Tod) | Typecheck rejects Node APIs and built-ins newer than the Node 22 floor, though Tod develops on 25. Checked by the compiler only; no Node 22 test run |
-| I11 | Tests in a separate `tests/` folder mirroring `src/` (Tod) | Build config simply includes `src/`; the suite reads in one place |
+| #   | Decision                                                                                                                                 | Why                                                                                                                                                                             |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| I1  | TypeScript, `strict` plus `noUncheckedIndexedAccess`, `verbatimModuleSyntax`                                                             | Catches missing map lookups and other undefined values at compile time                                                                                                          |
+| I2  | Tests on **Vitest**, not Jest (Tod, 2026-11-23)                                                                                          | Runs TypeScript and ESM natively, no `ts-jest` adapter, same `describe`/`it`/`expect` API                                                                                       |
+| I3  | Native ESM: `"type": "module"`, `module`/`moduleResolution` `NodeNext`                                                                   | No CommonJS workaround needed once Jest is gone; relative imports carry `.js` extensions                                                                                        |
+| I4  | Compile with `tsc` to `dist/` (`bin` → `dist/cli.js`); `dist/` gitignored and built by a `prepare` script                                | Plain JavaScript runs on any LTS Node, where running `.ts` directly needs Node ≥ 23.6 or a `tsx` dependency; npm runs `prepare` on `npm ci`, so one command installs and builds |
+| I5  | `engines.node` `>=22`                                                                                                                    | Oldest LTS line still supported; Tod develops on Node 25                                                                                                                        |
+| I6  | ESLint (flat config, `typescript-eslint` recommended, type-checked) + Prettier, with `eslint-config-prettier` so they don't fight        | Hygiene is graded; one `npm run lint` checks both                                                                                                                               |
+| I7  | Two tsconfigs: `tsconfig.json` (src + tests, `noEmit`, for typecheck and the editor) and `tsconfig.build.json` (src only, emits `dist/`) | Tests stay out of the build                                                                                                                                                     |
+| I8  | Plans in `docs/plans/` ship with the submission                                                                                          | They show the process                                                                                                                                                           |
+| I9  | No runtime dependencies                                                                                                                  | One file argument or stdin doesn't justify an argument parser                                                                                                                   |
+| I10 | `@types/node@22`, `lib` ES2024, `target` ES2022 (the `@tsconfig/node22` settings, without the dependency) (Tod)                          | Typecheck rejects Node APIs and built-ins newer than the Node 22 floor, though Tod develops on 25. Checked by the compiler only; no Node 22 test run                            |
+| I11 | Tests in a separate `tests/` folder mirroring `src/` (Tod)                                                                               | Build config simply includes `src/`; the suite reads in one place                                                                                                               |
 
 I4 and I10 are recorded together in the README's Design Tradeoffs section (step 6). The rest stay in this plan and AGENTS.md.
 
@@ -34,7 +34,7 @@ I4 and I10 are recorded together in the README's Design Tradeoffs section (step 
    whether the zip ships git history (folder with `.git`) or not (`git archive -o submission.zip HEAD`).
 1. **Ask Tod to approve the dev dependencies** and wait for his OK (AGENTS.md: no new dependencies without
    asking). Ask exactly: "OK to run `npm install -D typescript vitest @types/node@22 eslint @eslint/js
-   typescript-eslint prettier eslint-config-prettier`? Versions will be the current releases, locked in
+typescript-eslint prettier eslint-config-prettier`? Versions will be the current releases, locked in
    `package-lock.json`."
 2. Copy this plan to `docs/plans/infrastructure.md`. Commit: `docs(plans): add infrastructure plan`.
 3. Create `package.json`: `name`, `private: true`, `type: module`, `bin`, `engines`, and the scripts
