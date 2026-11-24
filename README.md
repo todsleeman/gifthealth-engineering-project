@@ -74,3 +74,5 @@ npm run check
 ## Error Handling and Edge Cases
 
 ## Future Improvements
+
+- **HTTP API.** The core logic is separate from the CLI, so it could sit behind an HTTP API without changes.
