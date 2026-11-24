@@ -88,3 +88,31 @@ The agent runs these without stopping. Tod's part is at the end, reviewing the P
 - `npx rx-report < /dev/null` fails with "not implemented", as expected on this branch.
 - `grep -rl dinero.js src` lists only `src/money.ts`.
 - A fresh `git clone --branch scaffolding` into the scratchpad runs `npm ci` successfully.
+
+## Outcome (2026-11-24)
+
+Done, on branch `scaffolding` on top of `architecture` (not pushed, not merged). Steps 1 to 6 complete. Step 7
+is Tod's review.
+
+Verification:
+
+- `npm run typecheck`, `npm run lint` and `npm run build` exit 0.
+- `npm test` exits 0 with 7 test files skipped and 94 todo tests. Vitest treats todo-only files as passing.
+- `npx rx-report < /dev/null` exits 1 with `Error: not implemented`, as expected.
+- `grep -rl dinero.js src` lists only `src/money.ts`.
+- A fresh `git clone --branch scaffolding` into the scratchpad runs `npm ci` and `npm test`, both exit 0.
+- `master` (22dcc48) and `architecture` (32f71e3) are unchanged.
+
+Changes from the instructions for this branch:
+
+- `src/input.ts` also has `openInput(source, stdin)` and a `ReadableSource` type, so opening a file (and the
+  stream-error risk) has one home rather than sitting inside `run`.
+- `USAGE` is an empty string for now. Its text is written with its test.
+- `src/cli.ts` uses top-level `await`, which the ESM and ES2022 settings allow.
+- S15 (code unit order for names) was added. The instructions didn't cover it, but `compareSummaries` needed a
+  contract for ties.
+
+Proposed decisions awaiting Tod: S3 (`Rejection` union), S4 (no line number in `ParseResult`), S5 (`parseLine`
+returns `undefined` for an empty line), S6 (`Pharmacy` class), S7 (`apply` returns a rejection), S8
+(`{ fills, returns }` state), S10 (`input.ts`), S11 (`app.ts` with
+`run`), S15 (code unit order). S14's message wording is also open to rewording.
