@@ -108,13 +108,15 @@ npm run check
 
 ```
 src/
-  cli.ts        arguments, file or stdin, stdout and stderr, exit codes
+  cli.ts        the entry point, which hands the arguments and streams to run
+  app.ts        run, which connects the modules, writes output and picks the exit code
+  input.ts      choosing the file or stdin, opening it and reading it line by line
   events.ts     parsing one line into an event
   pharmacy.ts   the spec's rules (created first, fills, returns) and income
   money.ts      Money, the only file that uses Dinero.js
   report.ts     report order and line format
   types.ts      the domain types the core modules share
-tests/          mirrors src/
+tests/          mirrors src/, plus cli.test.ts for the built CLI
 docs/
   architecture.md   module map, data flow and types
   plans/            the plans this was built from, with every decision and who made it
@@ -122,18 +124,20 @@ docs/
 
 ## Architecture and Design
 
-The full module map and type list is in [docs/architecture.md](docs/architecture.md). The decisions behind it,
-including the options I turned down, are in [docs/plans/architecture.md](docs/plans/architecture.md).
+The full module map, function list and type list is in [docs/architecture.md](docs/architecture.md). The
+decisions behind it, including the options I turned down, are in
+[docs/plans/architecture.md](docs/plans/architecture.md) and [docs/plans/scaffolding.md](docs/plans/scaffolding.md).
 
 ### Data Flow
 
-The CLI reads one line at a time and parses it into an event. A line that can't be used goes to stderr with its
-line number. Valid events go through the pharmacy rules as they are read, so the whole file is never held in
-memory. When the input ends, the rules give one summary per patient. The report sorts the summaries, formats
-them and prints them to stdout. The exit code says whether any line was rejected.
+The app reads one line at a time, numbers it and parses it into an event. A line that can't be used goes to
+stderr with its line number. Valid events go through the pharmacy rules as they are read, so the whole file is
+never held in memory. The pharmacy rules hand back a rejection for an event the spec says can't happen, and that
+line is reported the same way. When the input ends, the rules give one summary per patient. The report sorts the
+summaries, formats them and prints them to stdout. The exit code says whether any line was rejected.
 
-Only the CLI touches files, stdin or stdout. The rest takes values and returns values, which keeps it easy to
-test and lets it sit behind an HTTP API later.
+Only the app and input modules touch files, stdin or stdout, and the app gets its streams passed in. The rest
+takes values and returns values, which keeps it easy to test and lets it sit behind an HTTP API later.
 
 ### Data Structures
 
@@ -152,8 +156,11 @@ test and lets it sit behind an HTTP API later.
 ### Code Organization
 
 Each module owns one part of the problem. `events.ts` knows the input format, `pharmacy.ts` knows the spec's
-rules, `report.ts` knows the output format, and `cli.ts` connects them to the terminal. All the spec's business
-rules, income included, are in `pharmacy.ts`.
+rules, `report.ts` knows the output format, `input.ts` knows where the lines come from, and `app.ts` connects them.
+All the spec's business rules, income included, are in `pharmacy.ts`.
+
+`cli.ts` only starts `run` with the real process streams. Keeping `run` in its own module means tests can import
+it and call it with fake streams, which they couldn't do if importing it started the CLI.
 
 The domain types the core modules share are in `types.ts`, so the whole data model reads in one file. Types for
 the edge of the program, like the exit codes, stay with the code that uses them. `Money` is a class with its own
@@ -213,8 +220,9 @@ behaviour, so it stays in `money.ts`.
 - **One file for the domain types**
   - The types the core modules share (events, reject reasons, summaries) are in types.ts, so the data model
     reads in one place.
-  - Types for the edge of the program stay with the code that uses them, so the exit codes are in cli.ts. This
-    keeps I/O types out of the domain file, so the core still has no I/O.
+  - Types for the edge of the program stay with the code that uses them, so the exit codes and streams are in
+    app.ts and the input source is in input.ts. This keeps I/O types out of the domain file, so the core still
+    has no I/O.
   - The cost is that some types sit away from the code that uses them most, such as the reject reasons and the
     parser. If the model grows large, types.ts would split into one file per area, such as events and summaries.
   - It is a .ts file rather than a .d.ts. TypeScript is set to skip checking .d.ts files (skipLibCheck), so a
@@ -232,6 +240,18 @@ behaviour, so it stays in `money.ts`.
   - Also builds dist/ through prepare. If install scripts are turned off, run npm run build.
 
 ## Testing Strategy
+
+Tests are written before the code they check, and each one is named after the spec rule or assumption it
+covers. They started as a list of `it.todo` entries, one per rule, so the list doubles as a checklist of the spec.
+
+There are three levels.
+
+- **Unit tests per module.** Parsing, money, the pharmacy rules, the report format and choosing the input are
+  each tested on their own with plain values. This is where most of the spec's rules are checked.
+- **Tests of `run` with fake streams.** These check the pieces together in the same process. They cover what
+  goes to stdout and stderr, the line numbers in warnings, and the exit codes, without starting a real process.
+- **Acceptance tests on the built CLI.** These run `dist/cli.js` as a child process with the spec's sample,
+  once as a file argument and once through stdin, and compare stdout with the expected output byte for byte.
 
 ## Error Handling and Edge Cases
 
