@@ -9,7 +9,10 @@ import {
 
 const CENTS_PER_DOLLAR = 100;
 
-/** An amount of money in whole US dollars, stored as integer cents by Dinero.js. Immutable. */
+/**
+ * An amount of money in US dollars, stored as integer cents by Dinero.js. Immutable. Only `dollars` creates an
+ * amount and it takes whole dollars, so every amount is a whole number of dollars and `format` prints no cents.
+ */
 export class Money {
   private constructor(private readonly value: Dinero<number>) {}
 
