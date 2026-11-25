@@ -7,32 +7,33 @@ describe("run: report", () => {
   it.todo("skips empty lines without reporting them (A12)");
 });
 
-describe("run: rejected lines (A15, A18)", () => {
+describe("run: one rejected line stops the report (S18)", () => {
+  it.todo("writes each rejected line to stderr with its line number");
+  it.todo("prints no report and exits 1 when any line was rejected");
   it.todo(
-    "writes each rejected line to stderr with its line number and still prints the report",
+    "keeps reading after a rejected line, so every rejected line is listed",
   );
-  it.todo("exits 1 when any line was rejected");
   it.todo(
     "numbers lines from 1 and counts empty lines, so numbers match the file",
   );
-  it.todo("writes rejections in line order, before the report");
-  it.todo("reports a second created on stderr and exits 1 (A16)");
+  it.todo("writes rejections in line order");
+  it.todo("prints no report and exits 1 for a second created (A16)");
   it.todo(
-    "reports a return with no fill to cancel on stderr and exits 1 (A17)",
+    "prints no report and exits 1 for a return with no fill to cancel (A17)",
   );
   it.todo(
-    "doesn't report fills and returns before created, which the spec discards",
+    "doesn't reject fills and returns before created, which the spec discards, and still prints the report",
   );
   it.todo(
-    "prints the README's two-error example: line 4 and line 10 on stderr, the spec's report on stdout",
+    "prints the README's two-error example: line 4 and line 10 on stderr and nothing on stdout",
   );
 });
 
-describe("run: no report (A14, A18)", () => {
-  it.todo("prints usage and exits 2 with more than one argument");
-  it.todo("prints usage and exits 2 with no argument and a terminal on stdin");
-  it.todo("prints an error and exits 2 for a missing file");
-  it.todo("prints an error and exits 2 for a directory");
+describe("run: input problems (A14, S18)", () => {
+  it.todo("prints usage and exits 1 with more than one argument");
+  it.todo("prints usage and exits 1 with no argument and a terminal on stdin");
+  it.todo("prints an error and exits 1 for a missing file");
+  it.todo("prints an error and exits 1 for a directory");
   it.todo("writes nothing to stdout when there is no report");
 });
 

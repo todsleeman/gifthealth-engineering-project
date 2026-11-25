@@ -2,8 +2,7 @@ import type { Rejection } from "./types.js";
 
 export const ExitCode = {
   Success: 0,
-  LinesRejected: 1,
-  NoReport: 2,
+  NoReport: 1,
 } as const;
 
 export type ExitCode = (typeof ExitCode)[keyof typeof ExitCode];
@@ -23,9 +22,10 @@ export const USAGE = "";
  *
  * Reads events from the file named in `args`, or from `io.stdin` (A14), numbering lines from 1, empty lines
  * included. Each rejected line goes to `io.stderr` as `describeRejection` words it, as soon as it is read, and
- * processing continues (A15). At the end of the input, the report goes to `io.stdout`, each line ending in
- * `\n`. Resolves to `Success`, to `LinesRejected` if any line was rejected, or to `NoReport` for a usage error
- * or input that can't be read, with nothing written to stdout (A18). Never exits the process (A19).
+ * reading continues so every rejected line is listed (S18). At the end of the input, if no line was rejected, the
+ * report goes to `io.stdout`, each line ending in `\n`, and `run` resolves to `Success`. It resolves to
+ * `NoReport`, with nothing written to stdout, if any line was rejected, for a usage error, or for input that
+ * can't be read (S18). Never exits the process (A19).
  */
 export function run(_args: readonly string[], _io: Io): Promise<ExitCode> {
   throw new Error("not implemented");
