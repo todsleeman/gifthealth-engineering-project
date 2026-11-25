@@ -1,7 +1,7 @@
 import { createReadStream } from "node:fs";
 import { Readable } from "node:stream";
 import { describe, expect, it } from "vitest";
-import { chooseInput, openInput, readLines } from "../src/input.js";
+import { chooseInput, openInput, readLines } from "../../src/helpers/input.js";
 
 const SAMPLE = "tests/fixtures/spec-sample.txt";
 

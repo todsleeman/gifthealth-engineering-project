@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseLine } from "../src/events.js";
+import { parseLine } from "../../src/helpers/events.js";
 
 describe("parseLine: line format", () => {
   it("parses 'Nick A created' into patient Nick, drug A and kind created", () => {

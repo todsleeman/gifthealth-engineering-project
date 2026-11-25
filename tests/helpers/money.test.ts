@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { Money } from "../src/money.js";
+import { Money } from "../../src/helpers/money.js";
 
 describe("Money.dollars: whole dollars only", () => {
   it("creates an amount of whole dollars", () => {

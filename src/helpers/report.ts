@@ -1,4 +1,4 @@
-import type { PatientSummary } from "./types.js";
+import type { PatientSummary } from "../types.js";
 
 /**
  * Report order: more net fills first, then patient names in English alphabetical order, compared with

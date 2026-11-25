@@ -1,4 +1,4 @@
-import { EVENT_KINDS, type EventKind, type ParseResult } from "./types.js";
+import { EVENT_KINDS, type EventKind, type ParseResult } from "../types.js";
 
 const FIELD_COUNT = 3;
 
