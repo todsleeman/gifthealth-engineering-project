@@ -141,49 +141,13 @@ describe("returned", () => {
     expect(totals(pharmacy)).toEqual([["Mark", 0, "-$1"]]);
   });
 
-  it("a return whose only fill came before created is discarded with that fill, with no $1 charged", () => {
-    const pharmacy = pharmacyAfter(
-      "Mark B filled",
-      "Mark B created",
-      "Mark B returned",
-    );
+  it("a fill before created doesn't count, so a later return with no fill since created is rejected as nothing-to-return", () => {
+    const pharmacy = pharmacyAfter("Mark B filled", "Mark B created");
+    expect(pharmacy.apply(event("Mark B returned"))).toEqual({
+      reason: "nothing-to-return",
+      event: event("Mark B returned"),
+    });
     expect(totals(pharmacy)).toEqual([["Mark", 0, "$0"]]);
-  });
-
-  it("a return cancels a fill made after created before it uses up a fill discarded before created, and costs $1", () => {
-    const pharmacy = pharmacyAfter(
-      "Mark B filled",
-      "Mark B created",
-      "Mark B filled",
-      "Mark B returned",
-    );
-    expect(totals(pharmacy)).toEqual([["Mark", 0, "-$1"]]);
-    expect(pharmacy.apply(event("Mark B returned"))).toBeUndefined();
-    expect(totals(pharmacy)).toEqual([["Mark", 0, "-$1"]]);
-  });
-
-  it("a second return after that is still rejected, as one discarded fill accounts for one return", () => {
-    const pharmacy = pharmacyAfter(
-      "Mark B filled",
-      "Mark B created",
-      "Mark B returned",
-    );
-    expect(pharmacy.apply(event("Mark B returned"))).toEqual({
-      reason: "nothing-to-return",
-      event: event("Mark B returned"),
-    });
-  });
-
-  it("a return before created uses up a fill before created, so a later return with nothing to cancel is rejected", () => {
-    const pharmacy = pharmacyAfter(
-      "Mark B filled",
-      "Mark B returned",
-      "Mark B created",
-    );
-    expect(pharmacy.apply(event("Mark B returned"))).toEqual({
-      reason: "nothing-to-return",
-      event: event("Mark B returned"),
-    });
   });
 
   it("a return only cancels a fill of its own prescription, so Mark C returned doesn't cancel a Mark B fill", () => {

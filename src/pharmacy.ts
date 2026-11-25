@@ -18,18 +18,10 @@ interface Prescription {
   returns: number;
 }
 
-/** Values kept per prescription, grouped by patient and then by drug. */
-type ByPrescription<T> = Map<PatientName, Map<DrugName, T>>;
-
 /** The spec's prescription rules for one run. Each run starts with a new, empty `Pharmacy`. */
 export class Pharmacy {
-  readonly #patients: ByPrescription<Prescription> = new Map();
-
-  /**
-   * Fills discarded because they came before their prescription's `created`, less the returns that have used
-   * them up. Kept for prescriptions that are never created too, but never part of `summaries()`.
-   */
-  readonly #discardedFills: ByPrescription<number> = new Map();
+  /** Created prescriptions, grouped by patient and then by drug. */
+  readonly #patients = new Map<PatientName, Map<DrugName, Prescription>>();
 
   /**
    * Applies one event. Returns `undefined` when the event was applied or discarded, or a rejection for an
@@ -37,11 +29,10 @@ export class Pharmacy {
    *
    * - `created` creates the prescription with no fills. A second `created` for the same patient and drug is a
    *   `duplicate-created` rejection.
-   * - `filled` adds one fill, worth $5. Before `created` it is discarded.
+   * - `filled` adds one fill, worth $5. Before `created` it is discarded and never counts.
    * - `returned` cancels one fill not yet cancelled and costs $1. Before `created` it is discarded. After
-   *   `created`, a return with no fill left to cancel is also discarded, with no charge, if a fill of this
-   *   prescription was discarded before `created`: each discarded fill accounts for one return, before or
-   *   after `created`. Otherwise it is a `nothing-to-return` rejection.
+   *   `created`, a return with no fill left to cancel is a `nothing-to-return` rejection, even if a fill came
+   *   before `created`, since that fill was discarded.
    */
   apply(event: PrescriptionEvent): RuleRejection | undefined {
     const prescription = this.#patients.get(event.patient)?.get(event.drug);
@@ -50,7 +41,7 @@ export class Pharmacy {
         if (prescription) {
           return { reason: "duplicate-created", event };
         }
-        drugsOf(this.#patients, event.patient).set(event.drug, {
+        this.#drugsOf(event.patient).set(event.drug, {
           fills: 0,
           returns: 0,
         });
@@ -58,23 +49,17 @@ export class Pharmacy {
       case "filled":
         if (prescription) {
           prescription.fills += 1;
-        } else {
-          this.#discardFill(event);
         }
         return undefined;
       case "returned":
         if (!prescription) {
-          this.#useDiscardedFill(event);
           return undefined;
         }
-        if (prescription.returns < prescription.fills) {
-          prescription.returns += 1;
-          return undefined;
+        if (prescription.returns === prescription.fills) {
+          return { reason: "nothing-to-return", event };
         }
-        if (this.#useDiscardedFill(event)) {
-          return undefined;
-        }
-        return { reason: "nothing-to-return", event };
+        prescription.returns += 1;
+        return undefined;
       default: {
         const unknown: never = event.kind;
         throw new Error(`unknown event kind: ${String(unknown)}`);
@@ -102,32 +87,13 @@ export class Pharmacy {
     });
   }
 
-  #discardFill({ patient, drug }: PrescriptionEvent): void {
-    const counts = drugsOf(this.#discardedFills, patient);
-    counts.set(drug, (counts.get(drug) ?? 0) + 1);
-  }
-
-  /** Uses up one discarded fill of the event's prescription. False if none is left. */
-  #useDiscardedFill({ patient, drug }: PrescriptionEvent): boolean {
-    const counts = this.#discardedFills.get(patient);
-    const count = counts?.get(drug) ?? 0;
-    if (count === 0) {
-      return false;
+  /** The patient's prescriptions, added empty if the patient has none yet. */
+  #drugsOf(patient: PatientName): Map<DrugName, Prescription> {
+    let drugs = this.#patients.get(patient);
+    if (!drugs) {
+      drugs = new Map();
+      this.#patients.set(patient, drugs);
     }
-    counts?.set(drug, count - 1);
-    return true;
+    return drugs;
   }
-}
-
-/** The patient's map of prescriptions, added empty if the patient has none yet. */
-function drugsOf<T>(
-  byPrescription: ByPrescription<T>,
-  patient: PatientName,
-): Map<DrugName, T> {
-  let drugs = byPrescription.get(patient);
-  if (!drugs) {
-    drugs = new Map();
-    byPrescription.set(patient, drugs);
-  }
-  return drugs;
 }
