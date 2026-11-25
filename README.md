@@ -82,7 +82,7 @@ npx rx-report events.txt
 cat events.txt | npx rx-report
 ```
 
-The report goes to stdout. If any line can't be used, every such line is listed on stderr with its line number
+The report goes to stdout. If a line can't be used, it is reported on stderr with its line number, reading stops
 and no report is printed.
 
 #### Exit codes
@@ -133,9 +133,9 @@ decisions behind it, including the options I turned down, are in
 The app reads one line at a time, numbers it and parses it into an event. A line that can't be used goes to
 stderr with its line number. Valid events go through the pharmacy rules as they are read, so the whole file is
 never held in memory. The pharmacy rules hand back a rejection for an event the spec says can't happen, and that
-line is reported the same way. Reading carries on after a rejected line, so every one is listed. When the input
-ends, if no line was rejected, the rules give one summary per patient, and the report sorts the summaries,
-formats them and prints them to stdout. If any line was rejected, nothing goes to stdout and the exit code is 1.
+line is reported the same way. The first rejected line stops the run: nothing goes to stdout and the exit code
+is 1. When the input ends with no line rejected, the rules give one summary per patient, and the report sorts
+the summaries, formats them and prints them to stdout.
 
 Only the app and input modules touch files, stdin or stdout, and the app gets its streams passed in. The rest
 takes values and returns values, which keeps it easy to test and lets it sit behind an HTTP API later.
@@ -146,13 +146,15 @@ takes values and returns values, which keeps it easy to test and lets it sit beh
   enough. The event names are a `const` array and the type is derived from it, so the parser's check and the
   type can't drift apart.
 - **Prescriptions.** A prescription is a patient and a drug. The pharmacy rules keep prescriptions grouped by
-  patient, so building the report is one pass over each patient's prescriptions.
+  patient, so building the report is one pass over each patient's prescriptions. Each prescription stores only
+  its fill and return counts (see Design Tradeoffs).
 - **Money.** `Money` is a small class around Dinero.js. It stores integer cents and only works in whole dollars
   today. Keeping money in its own type means it can't be added to a fill count by mistake.
 - **Summaries.** Each patient's summary holds their name, net fills and income. The field is `netFills` because
   returns cancel fills, so it isn't the number of fill events.
-- **Parse results.** A rejected line comes back as a value with a reason code, not as a thrown error. The CLI
-  decides what to do with it and how to word the message.
+- **Rejections.** A rejected line comes back as a value, not as a thrown error, from both the parser and the
+  pharmacy rules. Each one carries what its message needs, such as the field count or the word that wasn't an
+  event. `run` decides what to do with it and how to word the message.
 
 ### Code Organization
 
@@ -170,7 +172,8 @@ behaviour, so it stays in `money.ts`.
 ## Assumptions
 
 - **Report order.** The spec doesn't state an order. The sample matches patients sorted by fills, most first,
-  with ties broken by name in alphabetical order, so the report uses that.
+  with ties broken by name in alphabetical order, so the report uses that. Names are compared in English
+  alphabetical order on every machine, so adam comes before Zed and mark comes just before Mark.
 - **Income format.** Prices are whole dollars ($5 per fill, $1 per return), so all income is a whole number of
   dollars and prints without decimals ($9, -$1, $0). A negative amount puts the minus sign before the dollar
   sign, as in the sample.
@@ -187,30 +190,32 @@ behaviour, so it stays in `money.ts`.
 - **A return needs a fill to cancel.** The spec says a return cancels a prior fill and always has one. A return
   is only applied if the prescription has a fill that hasn't already been cancelled. A return with nothing to
   cancel is rejected and reported like a malformed line, with no fill cancelled and no $1 charged. This covers a
-  return with no fill at all, a second return for a single fill, and a return whose only fill was discarded
-  because it came before created.
+  return with no fill at all and a second return for a single fill.
 - **Events before created.** Fills and returns before created are discarded for good. A later created starts the
-  prescription from zero.
+  prescription from zero. A return after created whose fill was one of those discarded fills is discarded with
+  it, with no fill cancelled and no $1 charged, rather than rejected: the spec's prior fill did happen, it just
+  doesn't count. Each discarded fill accounts for one return, and a return before created uses one up too.
 - **Names.** Patient and drug names can be any text without spaces. The sample's single letters read as
   placeholders. Names and event names match exactly, including case, so mark and Mark are different patients
   and Filled is an unknown event.
 - **Line format.** Fields are separated by single spaces, as the spec describes the file as space-delimited. A
   line with extra spaces, a leading or trailing space, or more or fewer than three fields is malformed. Empty
-  lines are skipped because they hold no event.
+  lines are skipped because they hold no event. Extra spaces make empty fields, which count as fields, so `Mark  B filled`
+  is reported as 4 fields.
 - **Input source.** If a filename is given, the program reads that file and ignores stdin. Otherwise it reads
   stdin.
-- **One bad line is an error.** The spec says events are recorded in the order they happen, and they are applied
-  in that order, each one to the prescription as the events before it left it. If a line is skipped, that order
-  is changed, and the events after it are applied to a history that didn't happen. For example, a skipped fill
-  makes a later return look like it has nothing to cancel. So a line that can't be used (the wrong number of
-  fields, an unknown event, a second created, or a return with nothing to cancel) is an error: it is listed on
-  stderr, no report is printed, and the command exits with 1. See Error Handling and Edge Cases.
+- **One bad line is an error.** Events are applied in the order they happen, so skipping a line would change the
+  history every later line is applied to. A line that can't be used (the wrong number of fields, an unknown event,
+  a second created, or a return with nothing to cancel) is reported on stderr, reading stops, no report is
+  printed, and the command exits with 1. The reasoning is under Design Tradeoffs.
 
 ## Design Tradeoffs
 
 ### Design
 
 - **Dinero.js for money instead of a hand-written class**
+  - Money is where hand-written code tends to go wrong (floating-point cents, rounding, mixed currencies), so I
+    use a tested library for it by default, even when today's sums are simple.
   - Today the report only adds and multiplies whole dollars, so a small class would be enough.
   - Dinero.js stores money as integer cents with immutable values, so supporting prices with cents later is a
     change to money.ts only.
@@ -221,6 +226,26 @@ behaviour, so it stays in `money.ts`.
     so every rule from the spec is in one module.
   - Pricing that varies (per drug, from config) would be better as its own module that turns fills and returns
     into money. With one fixed price per event, that module would only hold two constants.
+- **A Pharmacy class for the rules' state**
+  - The rules need state that lasts the whole run: a return on line 9 depends on fills on lines 3 and 7. A
+    Pharmacy object holds that state privately, and apply is the only way to change it, so nothing can break
+    the rules' facts (a prescription exists only after created, returns never exceed fills).
+  - Each run makes a new Pharmacy, so runs and tests never share state.
+  - Plain functions with the state passed around would work too, but anything holding the state could change
+    it without going through the rules. A single function over all the events would need the whole file in
+    memory before it could start.
+  - The cost is that it holds changing state, so a test applies a few events and then checks the summaries,
+    rather than comparing one value in and one value out.
+- **Counts per prescription instead of a list of events**
+  - Each prescription keeps two numbers, its fills and its returns. Net fills, income and whether a return is
+    allowed are all worked out from them, so nothing is stored twice.
+  - Memory grows with the number of prescriptions, not the number of lines, so a long file costs no more than a
+    short one with the same patients.
+  - The cost is that the counts forget the history: which fill a return cancelled, or when. A rule that depends
+    on order or dates, such as a $1 penalty only for returns within 30 days, can't be run on them.
+  - The input file already holds the full history in order, so a new rule means running the new code over the
+    file again. If prescriptions were kept between runs (see Future Improvements), the events would need storing
+    too, with the counts built from them.
 - **One file for the domain types**
   - The types the core modules share (events, reject reasons, summaries) are in types.ts, so the data model
     reads in one place.
@@ -232,6 +257,18 @@ behaviour, so it stays in `money.ts`.
   - It is a .ts file rather than a .d.ts. TypeScript is set to skip checking .d.ts files (skipLibCheck), so a
     mistake in one would go unnoticed. A .d.ts also can't hold the `EVENT_KINDS` list that `EventKind` is built
     from.
+
+- **Stop with no report at the first rejected line**
+  - Events are applied in the order they happen, so a skipped line changes what every later line for that
+    prescription means, and a line with the wrong number of fields can't even say which patient it belonged to.
+    A report with wrong income that looks right is worse than none.
+  - After a rejected line the rules' state no longer matches what happened, so checking later lines could
+    report errors on lines that are fine. Stopping at the first one means every message is a real error, and the
+    rule is easy to state and test.
+  - The cost is that a bad line blocks the report, and a file with several takes one run per bad line to fix.
+  - I also considered skipping bad lines and printing the report anyway, and stopping the rules but parsing the
+    rest of the file to list every malformed line at once. The first can print wrong totals, and the second is
+    harder to explain.
 
 ### Tooling
 
@@ -253,30 +290,22 @@ There are three levels.
 - **Unit tests per module.** Parsing, money, the pharmacy rules, the report format and choosing the input are
   each tested on their own with plain values. This is where most of the spec's rules are checked.
 - **Tests of `run` with fake streams.** These check the pieces together in the same process. They cover what
-  goes to stdout and stderr, the line numbers in warnings, and the exit codes, without starting a real process.
+  goes to stdout and stderr, the line numbers in error messages, and the exit codes, without starting a real process.
 - **Acceptance tests on the built CLI.** These run `dist/cli.js` as a child process with the spec's sample,
   once as a file argument and once through stdin, and compare stdout with the expected output byte for byte.
 
 ## Error Handling and Edge Cases
 
-One line that can't be used stops the report. The file is still read to the end, so every bad line is written to
-stderr with its line number and the reason in one run, and nothing is written to stdout. Lines the spec says
-can't happen (a second created, or a return with no fill to cancel) are handled the same way.
+The first line that can't be used is written to stderr with its line number and the reason, reading stops, and
+nothing is written to stdout. Lines the spec says can't happen (a second created, or a return with no fill to
+cancel) are handled the same way. Why is under Design Tradeoffs.
 
-The report can't be trusted once a line is missing. Events build on each other, so a lost line changes what the
-lines after it mean, and a line with the wrong number of fields can't even say which patient it belonged to. A
-report with wrong income that looks right is worse than no report, because it only takes one reader who doesn't
-check the exit code. The cost is that one bad line in a large file blocks the whole report until it is fixed.
-
-A later line can be rejected because of an earlier one. If a fill line is malformed, a return after it has
-nothing to cancel and is listed too.
-
-Here is the spec's sample with two bad lines added, `Mark B` at line 4 and `John E cancelled` at line 10.
+Here is the spec's sample with two bad lines added, `Mark B` at line 4 and `John E cancelled` at line 10. Only
+line 4 is reported. Fixing it and running again reports line 10.
 
 ```
 $ npx rx-report events.txt
 line 4: expected 3 fields, found 2
-line 10: unknown event "cancelled" (expected created, filled or returned)
 $ echo $?
 1
 ```
@@ -284,7 +313,8 @@ $ echo $?
 The input itself can also be a problem.
 
 - An empty file prints nothing and exits 0.
-- A missing or unreadable file, or a directory, prints an error to stderr and exits 1.
+- A missing or unreadable file, or a directory, prints Node's error to stderr and exits 1, for example
+  `rx-report: ENOENT: no such file or directory, open 'events.txt'`.
 - Running with no filename and nothing piped in prints usage and exits 1, instead of waiting for input.
 
 ## Future Improvements

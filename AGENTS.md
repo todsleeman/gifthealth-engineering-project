@@ -39,13 +39,13 @@ Module map and types: `docs/architecture.md`. Decisions (A1-A24), rejected optio
   skip checking a `.d.ts` (A24).
 - Money is a `Money` class around Dinero.js, whole US dollars only; nothing outside `money.ts` imports Dinero (A6, A7).
 - Report order is net fills descending, then name ascending (A10).
-- A malformed line, a second `created` or a return with no fill to cancel is an error: every one is listed on
-  stderr with its line number, and no report is printed (S18, replacing A15 and A18). Events are applied in the
+- A malformed line, a second `created` or a return with no fill to cancel is an error: the first one is written
+  to stderr with its line number, reading stops, and no report is printed (S18 and S23, replacing A15 and A18). Events are applied in the
   order they happen, so skipping a line would change the history later lines are applied to.
 - Exit codes: 0 report printed, 1 no report (a rejected line, a usage error or unreadable input) (S18).
 
 Function outline and the proposed decisions that resolved the architecture plan's deferred items (S1-S18):
-`docs/plans/scaffolding.md`. Proposed decisions need Tod's OK before the `scaffolding` branch is merged.
+`docs/plans/scaffolding.md`. Tod reviewed them on 2026-11-25: all accepted, some changed (the plan's Review section).
 
 - `src/cli.ts` is the entry point only. `run(args, io)` lives in `src/app.ts`, so tests import it and pass fake
   streams. Don't import `cli.ts` in tests: importing it starts the CLI.
@@ -66,6 +66,7 @@ Typecheck clean, tests pass, and the sample in the spec produces its expected ou
 - Design decisions and their reasons live in the README. Don't change module boundaries or the
   data model without asking.
 - Tests are named after the spec rule they check; write the test first and see it fail.
+- No plan decision IDs (such as A17 or S18) in `src/` or `tests/`: name the rule in words.
 
 ## Commit messages
 

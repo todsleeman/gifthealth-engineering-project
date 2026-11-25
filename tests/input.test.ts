@@ -1,6 +1,6 @@
 import { describe, it } from "vitest";
 
-describe("chooseInput: input source (A14)", () => {
+describe("chooseInput: input source", () => {
   it.todo("reads the named file when one argument is given");
   it.todo("reads the named file and ignores stdin when input is also piped");
   it.todo("reads stdin when no argument is given and stdin isn't a terminal");
@@ -8,11 +8,9 @@ describe("chooseInput: input source (A14)", () => {
   it.todo("is a usage error when more than one argument is given");
 });
 
-describe("openInput (A18)", () => {
+describe("openInput", () => {
   it.todo("returns stdin for the stdin source");
-  it.todo("opens an existing file");
-  it.todo("rejects for a missing file before any line is read");
-  it.todo("rejects for a directory before any line is read");
+  it.todo("returns a stream of the named file");
 });
 
 describe("readLines", () => {
@@ -22,4 +20,6 @@ describe("readLines", () => {
   it.todo("doesn't yield an extra empty line after a final line ending");
   it.todo("yields the last line when the input doesn't end with a line ending");
   it.todo("yields nothing for empty input");
+  it.todo("rejects for a missing file before yielding any line");
+  it.todo("rejects for a directory before yielding any line");
 });

@@ -8,10 +8,10 @@ describe("created", () => {
     "a prescription is a patient and a drug, so the same patient with another drug is a separate prescription",
   );
   it.todo(
-    "a second created for the same patient and drug is rejected as duplicate-created (A16)",
+    "a second created for the same patient and drug is rejected as duplicate-created",
   );
   it.todo(
-    "a second created leaves the prescription's fills and returns unchanged (A16)",
+    "a second created leaves the prescription's fills and returns unchanged",
   );
 });
 
@@ -31,13 +31,20 @@ describe("returned", () => {
   );
   it.todo("a return before created is discarded without a rejection");
   it.todo(
-    "a return with no fill at all is rejected as nothing-to-return, with no $1 charged (A17)",
+    "a return with no fill at all is rejected as nothing-to-return, with no $1 charged",
+  );
+  it.todo("a second return for a single fill is rejected as nothing-to-return");
+  it.todo(
+    "a return whose only fill came before created is discarded with that fill, with no $1 charged",
   );
   it.todo(
-    "a second return for a single fill is rejected as nothing-to-return (A17)",
+    "a second return after that is still rejected, as one discarded fill accounts for one return",
   );
   it.todo(
-    "a return whose only fill came before created is rejected as nothing-to-return (A17)",
+    "a return before created uses up a fill before created, so a later return with nothing to cancel is rejected",
+  );
+  it.todo(
+    "a return only cancels a fill of its own prescription, so Mark C returned doesn't cancel a Mark B fill",
   );
 });
 
@@ -54,5 +61,5 @@ describe("summaries", () => {
   it.todo(
     "gives the spec sample's totals: Mark 2 fills $9, John 0 fills -$1, Nick 0 fills $0",
   );
-  it.todo("a new Pharmacy starts empty, so runs never share state (A22)");
+  it.todo("a new Pharmacy starts empty, so runs never share state");
 });

@@ -1,6 +1,6 @@
 import type { Dinero } from "dinero.js";
 
-/** An amount of money in whole US dollars, stored as integer cents by Dinero.js (A6, A7). Immutable. */
+/** An amount of money in whole US dollars, stored as integer cents by Dinero.js. Immutable. */
 export class Money {
   private constructor(private readonly value: Dinero<number>) {}
 
@@ -9,7 +9,7 @@ export class Money {
     throw new Error("not implemented");
   }
 
-  /** `amount` whole dollars. Throws a `RangeError` unless `amount` is a safe integer (A7). */
+  /** `amount` whole dollars. Throws a `RangeError` unless `amount` is a safe integer. */
   static dollars(_amount: number): Money {
     throw new Error("not implemented");
   }
@@ -29,7 +29,7 @@ export class Money {
     throw new Error("not implemented");
   }
 
-  /** Whole dollars with the minus sign before the dollar sign and no separators: `$9`, `-$1`, `$0` (A7). */
+  /** Whole dollars with the minus sign before the dollar sign and no separators: `$9`, `-$1`, `$0`. */
   format(): string {
     throw new Error("not implemented");
   }

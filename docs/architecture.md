@@ -36,7 +36,7 @@ built test-first in the functionality plan.
 | `app.ts`      | `run(args, io)`                                             | The exit code, after writing the report to stdout and rejections to stderr |
 | `app.ts`      | `describeRejection(lineNumber, rejection)`                  | The stderr message for one rejected line                                   |
 | `input.ts`    | `chooseInput(args, stdinIsTTY)`                             | A file, stdin, or a usage error                                            |
-| `input.ts`    | `openInput(source, stdin)`                                  | The stream to read. Fails for a missing file or a directory                |
+| `input.ts`    | `openInput(source, stdin)`                                  | The file's stream or stdin, without checking the file first                |
 | `input.ts`    | `readLines(stream)`                                         | The stream's lines, one at a time, without line endings                    |
 | `events.ts`   | `parseLine(line)`                                           | An event, a rejection, or `undefined` for an empty line                    |
 | `pharmacy.ts` | `new Pharmacy()`, `apply(event)`                            | `undefined` when applied or discarded, or a rejection                      |
@@ -50,14 +50,14 @@ built test-first in the functionality plan.
 
 1. `cli.ts` calls `run` with the arguments and the process's stdin, stdout and stderr.
 2. `run` asks `chooseInput` for the file or stdin. A usage error goes to stderr and the exit code is 1.
-3. `openInput` opens the input. If it can't be read, the error goes to stderr and the exit code is 1.
-4. `run` reads the lines with `readLines`, numbering them from 1, empty lines included.
+3. `openInput` gives the file's stream, or stdin.
+4. `run` reads the lines with `readLines`, numbering them from 1, empty lines included. If the input can't be
+   read (a missing file or a directory), the error goes to stderr and the exit code is 1.
 5. Each line goes through `parseLine`. An empty line is skipped. A rejected line is numbered and written to
-   stderr straight away with `describeRejection`, and reading carries on so every rejected line is listed.
+   stderr with `describeRejection`, reading stops, nothing goes to stdout and the exit code is 1 (S18, S23).
 6. Each event goes to `Pharmacy.apply`, one at a time, as it is read. When it returns a rejection (a second
-   `created`, or a return with no fill to cancel), that line is reported the same way.
-7. Once the input ends, if any line was rejected, nothing goes to stdout and the exit code is 1 (S18).
-8. Otherwise `Pharmacy.summaries` gives one summary per patient with a created prescription, and `formatReport`
+   `created`, or a return with no fill to cancel), that line is reported and the run stops the same way.
+7. Once the input ends with no line rejected, `Pharmacy.summaries` gives one summary per patient with a created prescription, and `formatReport`
    sorts them with `compareSummaries` and formats each with `formatSummary`. `run` writes the lines to stdout
    and the exit code is 0.
 
@@ -72,7 +72,7 @@ Nothing is held at module level. Each run makes its own `Pharmacy`, so tests and
 | `DrugName`          | `types.ts` | A drug's name, any text without spaces                                                                |
 | `PrescriptionEvent` | `types.ts` | One event: patient, drug and kind                                                                     |
 | `Rejection`         | `types.ts` | Why a line was rejected, with what its message needs (below)                                          |
-| `RejectReason`      | `types.ts` | The rejection's code on its own                                                                       |
+| `RuleRejection`     | `types.ts` | The two rejections `Pharmacy.apply` can return                                                        |
 | `ParseResult`       | `types.ts` | Either a parsed event or a rejection                                                                  |
 | `Money`             | `money.ts` | An amount of money in whole US dollars, stored as integer cents                                       |
 | `PatientSummary`    | `types.ts` | One patient's name, net fills (fills minus returns) and income                                        |
@@ -98,13 +98,6 @@ Income is $5 for each net fill, minus $1 for each return (`FILL_INCOME` and `RET
 | 0    | Every line was valid and the report was printed                                                         |
 | 1    | No report was printed. A line was rejected, the command was used wrongly, or the input couldn't be read |
 
-One rejected line stops the report (S18): events are applied in the order they happen, so skipping a line would
-change the history every later line for that prescription is applied to.
-
-## Still open
-
-- The scaffolding plan's proposed decisions (S3 to S8, S10, S11 and S15) are waiting for Tod's OK.
-- Whether readline passes on a stream error for a missing file or a directory on Node 22. If not, `openInput`
-  opens the file first.
-- Whether a line with an empty field gets its own reason, instead of counting the empty field.
-- The exact wording of the usage text and of the error for an unreadable file.
+The first rejected line stops the run (S18, S23): events are applied in the order they happen, so skipping a
+line would change the history every later line for that prescription is applied to, and later messages could
+point at lines that are fine.

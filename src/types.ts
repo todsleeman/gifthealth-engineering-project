@@ -12,14 +12,18 @@ export interface PrescriptionEvent {
   readonly kind: EventKind;
 }
 
-/** Why a line was rejected, with what its stderr message needs (A15, S3). */
+/** Why a line was rejected, with what its stderr message needs. */
 export type Rejection =
   | { readonly reason: "wrong-field-count"; readonly fieldCount: number }
   | { readonly reason: "unknown-event"; readonly word: string }
   | { readonly reason: "duplicate-created"; readonly event: PrescriptionEvent }
   | { readonly reason: "nothing-to-return"; readonly event: PrescriptionEvent };
 
-export type RejectReason = Rejection["reason"];
+/** The rejections the pharmacy rules can return: a second `created` or a return with nothing to cancel. */
+export type RuleRejection = Extract<
+  Rejection,
+  { reason: "duplicate-created" | "nothing-to-return" }
+>;
 
 export type ParseResult =
   | { readonly ok: true; readonly event: PrescriptionEvent }
