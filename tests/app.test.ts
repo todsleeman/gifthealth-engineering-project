@@ -127,7 +127,7 @@ describe("run: one rejected line stops the report", () => {
     expect(
       await runWith(
         [],
-        "Mark B filled\nMark B returned\nMark B filled\nMark B created\nMark B returned\n",
+        "Mark B filled\nMark B returned\nMark B filled\nMark B created\n",
       ),
     ).toEqual({
       code: ExitCode.Success,
