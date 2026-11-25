@@ -7,16 +7,19 @@ modules, the data flow and the types. The decisions behind them, with the option
 
 ## Modules
 
-| Module            | Responsibility                                                                                |
-| ----------------- | --------------------------------------------------------------------------------------------- |
-| `src/cli.ts`      | The entry point. Hands the arguments and the process's streams to `run`                       |
-| `src/app.ts`      | `run`, which connects the modules, numbers lines, writes output and picks the exit code       |
-| `src/input.ts`    | Choosing the file or stdin, opening it, and reading it line by line                           |
-| `src/events.ts`   | Parsing one line into an event                                                                |
-| `src/pharmacy.ts` | The spec's rules (created first, fills, returns) and income                                   |
-| `src/money.ts`    | `Money`, the only module that uses Dinero.js                                                  |
-| `src/report.ts`   | The report's order and line format                                                            |
-| `src/types.ts`    | The domain types the core modules share, and the `EVENT_KINDS` list `EventKind` is built from |
+| Module                  | Responsibility                                                                                |
+| ----------------------- | --------------------------------------------------------------------------------------------- |
+| `src/cli.ts`            | The entry point. Hands the arguments and the process's streams to `run`                       |
+| `src/app.ts`            | `run`, which connects the modules, numbers lines, writes output and picks the exit code       |
+| `src/types.ts`          | The domain types the core modules share, and the `EVENT_KINDS` list `EventKind` is built from |
+| `src/pharmacy.ts`       | The spec's rules (created first, fills, returns) and income                                   |
+| `src/helpers/input.ts`  | Choosing the file or stdin, opening it, and reading it line by line                           |
+| `src/helpers/events.ts` | Parsing one line into an event                                                                |
+| `src/helpers/report.ts` | The report's order and line format                                                            |
+| `src/helpers/money.ts`  | `Money`, the only module that uses Dinero.js                                                  |
+
+The top of `src/` holds the entry point, the wiring, the data model and the rules. `helpers/` holds what they
+lean on: reading the input, the line and report formats, and `Money`.
 
 Only `app.ts` and `input.ts` touch streams or files, and `app.ts` reaches them through an `Io` object, so tests
 pass fake streams. Everything else takes values and returns values, so the same core could sit behind an HTTP

@@ -26,7 +26,7 @@ Decisions and reasons: `docs/plans/infrastructure.md`.
 - ESM with NodeNext: relative imports end in `.js`.
 - Supported floor is Node 22: `@types/node` stays on 22 and `lib` on ES2024, so newer APIs fail typecheck.
 - No unnecessary runtime dependencies: each needs Tod's OK and a README reason. The only one is
-  dinero.js, imported only by `src/money.ts`.
+  dinero.js, imported only by `src/helpers/money.ts`.
 
 ## Architecture
 

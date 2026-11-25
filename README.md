@@ -108,14 +108,15 @@ npm run check
 
 ```
 src/
-  cli.ts        the entry point, which hands the arguments and streams to run
-  app.ts        run, which connects the modules, writes output and picks the exit code
-  input.ts      choosing the file or stdin, opening it and reading it line by line
-  events.ts     parsing one line into an event
-  pharmacy.ts   the spec's rules (created first, fills, returns) and income
-  money.ts      Money, the only file that uses Dinero.js
-  report.ts     report order and line format
-  types.ts      the domain types the core modules share
+  cli.ts          the entry point, which hands the arguments and streams to run
+  app.ts          run, which connects the modules, writes output and picks the exit code
+  types.ts        the domain types the core modules share
+  pharmacy.ts     the spec's rules (created first, fills, returns) and income
+  helpers/        what the program and the rules lean on
+    input.ts      choosing the file or stdin, opening it and reading it line by line
+    events.ts     parsing one line into an event
+    report.ts     report order and line format
+    money.ts      Money, the only file that uses Dinero.js
 tests/          mirrors src/, plus cli.test.ts for the built CLI
   fixtures/     the spec's sample, its expected output and the two-error example below
   global-setup.ts   builds dist/ once before the tests run
@@ -162,9 +163,10 @@ takes values and returns values, which keeps it easy to test and lets it sit beh
 ### Code Organization
 
 Each module owns one part of the problem (see Project Structure), and all the spec's business rules, income
-included, are in `pharmacy.ts`. `cli.ts` only starts `run` with the real process streams. Keeping `run` in its own
-module means tests can import it and call it with fake streams, which they couldn't do if importing it started
-the CLI.
+included, are in `pharmacy.ts`. The top of `src/` is the program itself: how it starts, how it is wired, its data
+model and its rules. Everything those lean on is one folder down in `helpers/`. `cli.ts` only starts `run` with the
+real process streams. Keeping `run` in its own module means tests can import it and call it with fake streams,
+which they couldn't do if importing it started the CLI.
 
 ## Assumptions
 
