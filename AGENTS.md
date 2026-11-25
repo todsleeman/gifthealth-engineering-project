@@ -49,11 +49,13 @@ Function outline and the decisions that resolved the architecture plan's deferre
 How they were built, decisions F1-F14 and the deviations from that plan: `docs/plans/functionality.md`.
 
 - `src/cli.ts` is the entry point only. `run(args, io)` lives in `src/app.ts`, so tests import it and pass fake
-  streams. Don't import `cli.ts` in tests: importing it starts the CLI.
+  streams. Don't import `cli.ts` in tests: importing it starts the CLI. Besides starting `run`, it only ignores `EPIPE` and
+  `ENOTCONN` on stdout, so a reader that closes early (`| head -1`) ends the run quietly.
 - Each function's TSDoc is its full contract. Change the behaviour and its TSDoc and test together, test first.
 - `Pharmacy` keeps `#patients` (created prescriptions, `{ fills, returns }`) and `#discardedFills` (fills
   discarded before `created` and not yet used up by a return). Only `#patients` reaches `summaries()`.
-- `readLines` destroys its stream when reading stops, so the early stop at a rejected line releases the file.
+- `readLines` drops a byte order mark at the very start of the input, and destroys its stream when reading
+  stops, so the early stop at a rejected line releases the file.
 - A usage error prints `rx-report: <what was wrong>` and then `USAGE`.
 - Acceptance tests (`tests/cli.test.ts`) run the built `dist/cli.js`. `tests/global-setup.ts` builds it once
   before any test. Inputs and expected output are in `tests/fixtures/`.

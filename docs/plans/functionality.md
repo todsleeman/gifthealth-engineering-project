@@ -127,8 +127,10 @@ Each entry says what the plan said, what was done and why.
 3. **`readLines` closes its stream** (its contract said nothing about closing). Built: it closes the readline
    interface and destroys the stream when reading stops, at the end, on an error or early (F3). Why: readline
    leaves its input open when the caller stops early, and the run stops at the first rejected line.
-4. **Two tests beyond the outline** (the outline had 98 `it.todo` entries; there were 100 tests before the review fixes, 105 after). Added the
-   early-close test for `readLines` and the README's "fixing it reports line 10" claim (F8).
+4. **Seven tests beyond the outline** (the outline had 98 `it.todo` entries; there are 105 tests). The build
+   added two: the early-close test for `readLines` and the README's "fixing it reports line 10" claim (F8).
+   The review added five: two for the byte order mark, `multiply`'s whole count, the return order and the
+   closed stdout.
 5. **`vitest.config.ts` added to `tsconfig.json`'s `include`**. The plan named the config file but not this. Why:
    so the type check and the type-aware lint cover it, as they cover `src/` and `tests/`.
 6. **README additions beyond the checks the plan listed.** Error Handling now shows the usage output, Data
@@ -141,8 +143,8 @@ Each entry says what the plan said, what was done and why.
    `subtract`, `multiply` (F10). Why: Tod's review on PR #3.
 9. **`Money.multiply` enforces a whole count** (its contract only said the count must be whole). Built: it
    throws a `RangeError` otherwise (F11).
-10. **Closing stdout early** (the plan didn't cover a reader that stops early). Built: `EPIPE` and `ENOTCONN` on
-    stdout are ignored, so `| head -1` ends quietly (F13). An acceptance test covers it.
+10. **Closing stdout early** (S12 said `cli.ts` only calls `run` and sets the exit code). Built: it also ignores
+    `EPIPE` and `ENOTCONN` on stdout, so `| head -1` ends quietly (F13). An acceptance test covers it.
 11. **Byte order mark** (the line format assumption didn't cover it). Built: one at the very start of the input
     is dropped (F14), with tests, and the README's Line format assumption says so.
 12. **Smaller review fixes.** The return-order test (F12), the `readLines` TSDoc now says only a Node
