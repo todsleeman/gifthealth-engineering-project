@@ -1,11 +1,15 @@
 import type { Money } from "./money.js";
 
+/** The event names the input can hold, matched exactly, case included. */
 export const EVENT_KINDS = ["created", "filled", "returned"] as const;
 export type EventKind = (typeof EVENT_KINDS)[number];
 
+/** A patient's name as written in the input: any text without spaces. */
 export type PatientName = string;
+/** A drug's name as written in the input: any text without spaces. */
 export type DrugName = string;
 
+/** One line of input. A prescription is identified by its patient and drug together. */
 export interface PrescriptionEvent {
   readonly patient: PatientName;
   readonly drug: DrugName;
@@ -25,10 +29,12 @@ export type RuleRejection = Extract<
   { reason: "duplicate-created" | "nothing-to-return" }
 >;
 
+/** A parsed line: its event, or why it can't be one. */
 export type ParseResult =
   | { readonly ok: true; readonly event: PrescriptionEvent }
   | { readonly ok: false; readonly rejection: Rejection };
 
+/** One patient's line of the report. `netFills` is fills less the returns that cancelled them. */
 export interface PatientSummary {
   readonly patient: PatientName;
   readonly netFills: number;
