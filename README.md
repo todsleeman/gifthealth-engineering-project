@@ -149,9 +149,8 @@ takes values and returns values, which keeps it easy to test and lets it sit beh
   type can't drift apart.
 - **Prescriptions.** A prescription is a patient and a drug. The pharmacy rules keep prescriptions grouped by
   patient, so building the report is one pass over each patient's prescriptions. Each prescription stores only
-  its fill and return counts (see Design Tradeoffs). Fills discarded before created are counted the same way in
-  a separate map, so a later return of one of them can be discarded too, and patients who only appear there
-  never reach the report.
+  its fill and return counts (see Design Tradeoffs). Events before created are never stored, so only created
+  prescriptions reach the report.
 - **Money.** `Money` is a small class around Dinero.js. It stores integer cents and only works in whole dollars
   today. Keeping money in its own type means it can't be added to a fill count by mistake.
 - **Summaries.** Each patient's summary holds their name, net fills and income. The field is `netFills` because
@@ -194,13 +193,11 @@ behaviour, so it stays in `money.ts`.
 - **A return needs a fill to cancel.** The spec says a return cancels a prior fill and always has one. A return
   is only applied if the prescription has a fill that hasn't already been cancelled. A return with nothing to
   cancel is rejected and reported like a malformed line, with no fill cancelled and no $1 charged. This covers a
-  return with no fill at all and a second return for a single fill.
-- **Events before created.** Fills and returns before created are discarded for good. A later created starts the
-  prescription from zero. A return after created whose fill was one of those discarded fills is discarded with
-  it, with no fill cancelled and no $1 charged, rather than rejected: the spec's prior fill did happen, it just
-  doesn't count. Each discarded fill accounts for one return, and a return before created uses one up too. A return
-  cancels a fill made after created first, and only uses up a discarded fill when no such fill is left, so
-  when it could be either, the return counts and costs $1.
+  return with no fill at all, a second return for a single fill, and a return whose only fill came before
+  created.
+- **Events before created.** The spec says fills and returns before created must be discarded, so they are
+  treated as if they never happened. A later created starts the prescription from zero, and a return after it
+  can only cancel a fill made after it.
 - **Names.** Patient and drug names can be any text without spaces. The sample's single letters read as
   placeholders. Names and event names match exactly, including case, so mark and Mark are different patients
   and Filled is an unknown event.
