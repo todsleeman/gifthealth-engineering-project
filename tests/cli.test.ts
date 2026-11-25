@@ -1,4 +1,4 @@
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
@@ -44,5 +44,21 @@ describe("rx-report, the built CLI (acceptance)", () => {
     expect(result.stderr).toMatch(/^rx-report: ENOENT/);
     expect(result.stdout).toBe("");
     expect(result.status).toBe(1);
+  });
+
+  it("stops quietly with exit 0 when the reader closes stdout early, as with | head -1", async () => {
+    const manyPatients = Array.from(
+      { length: 200_000 },
+      (_, i) => `P${i} A created\n`,
+    ).join("");
+    const child = spawn(process.execPath, [CLI]);
+    let stderr = "";
+    child.stderr.on("data", (chunk: Buffer) => (stderr += chunk.toString()));
+    child.stdout.once("data", () => child.stdout.destroy());
+    child.stdin.on("error", () => {});
+    child.stdin.end(manyPatients);
+    const status = await new Promise((resolve) => child.on("close", resolve));
+    expect(stderr).toBe("");
+    expect(status).toBe(0);
   });
 });
