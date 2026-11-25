@@ -207,9 +207,11 @@ behaviour, so it stays in `money.ts`.
 - **Line format.** Fields are separated by single spaces, as the spec describes the file as space-delimited. A
   line with extra spaces, a leading or trailing space, or more or fewer than three fields is malformed. Empty
   lines are skipped because they hold no event. Extra spaces make empty fields, which count as fields, so `Mark  B filled`
-  is reported as 4 fields.
+  is reported as 4 fields. Windows line endings (`\r\n`) work, and a byte order mark at the start of the file,
+  which some Windows editors add, is dropped so it doesn't become part of the first name.
 - **Input source.** If a filename is given, the program reads that file and ignores stdin. Otherwise it reads
-  stdin.
+  stdin. The one argument is always a filename, so `-` and `--help` are read as files named `-` and `--help`.
+  The program takes no options, and a missing file prints the usual error.
 - **One bad line is an error.** Events are applied in the order they happen, so skipping a line would change the
   history every later line is applied to. A line that can't be used (the wrong number of fields, an unknown event,
   a second created, or a return with nothing to cancel) is reported on stderr, reading stops, no report is
