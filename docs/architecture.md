@@ -64,7 +64,7 @@ Each function's TSDoc comment in `src/` states its full behaviour. Each was buil
    sorts them with `compareSummaries` and formats each with `formatSummary`. `run` writes the lines to stdout
    and the exit code is 0.
 
-Nothing is held at module level. Each run makes its own `Pharmacy`, so tests and runs never share state.
+No mutable state is held at module level, only constants. Each run makes its own `Pharmacy`, so tests and runs never share state.
 
 ## Types
 
