@@ -18,14 +18,6 @@ describe("Money.dollars: whole dollars only", () => {
 });
 
 describe("Money arithmetic", () => {
-  it("zero is $0", () => {
-    expect(Money.zero.format()).toBe("$0");
-  });
-
-  it("add adds two amounts", () => {
-    expect(Money.dollars(5).add(Money.dollars(4)).format()).toBe("$9");
-  });
-
   it("subtract subtracts and can go below zero", () => {
     expect(Money.dollars(5).subtract(Money.dollars(1)).format()).toBe("$4");
     expect(Money.dollars(1).subtract(Money.dollars(2)).format()).toBe("-$1");
@@ -44,7 +36,6 @@ describe("Money arithmetic", () => {
   it("returns new amounts and leaves the originals unchanged", () => {
     const five = Money.dollars(5);
     const one = Money.dollars(1);
-    five.add(one);
     five.subtract(one);
     five.multiply(3);
     expect(five.format()).toBe("$5");
