@@ -1,6 +1,6 @@
 import { describe, it } from "vitest";
 
-describe("Money.dollars: whole dollars only (A7)", () => {
+describe("Money.dollars: whole dollars only", () => {
   it.todo("creates an amount of whole dollars");
   it.todo(
     "throws a RangeError for an amount that isn't a whole number, such as 4.35",
@@ -16,7 +16,7 @@ describe("Money arithmetic", () => {
   it.todo("returns new amounts and leaves the originals unchanged");
 });
 
-describe("Money.format: income format (A7)", () => {
+describe("Money.format: income format", () => {
   it.todo("prints whole dollars without decimals, as $9");
   it.todo("prints zero as $0");
   it.todo("puts the minus sign before the dollar sign, as -$1");

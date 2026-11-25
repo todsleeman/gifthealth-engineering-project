@@ -6,7 +6,7 @@ export type InputSource =
 export type ReadableSource = Exclude<InputSource, { kind: "usage-error" }>;
 
 /**
- * Where to read events from (A14, S10).
+ * Where to read events from.
  *
  * One argument is a file, whatever is on stdin. No argument means stdin, unless stdin is a terminal, which is a
  * usage error so the command doesn't sit waiting for input. More than one argument is a usage error.
@@ -19,20 +19,20 @@ export function chooseInput(
 }
 
 /**
- * The stream to read for `source`: the opened file, or `stdin`. Rejects with the file system error for a missing
- * or unreadable file or a directory, before any line is read (A18).
+ * The stream to read for `source`: a read stream of the file, or `stdin`. It doesn't check the file first:
+ * a missing file or a directory surfaces as an error from `readLines` before any line is yielded.
  */
 export function openInput(
   _source: ReadableSource,
   _stdin: NodeJS.ReadableStream,
-): Promise<NodeJS.ReadableStream> {
+): NodeJS.ReadableStream {
   throw new Error("not implemented");
 }
 
 /**
  * The stream's lines in order, without line endings. `\r\n` counts as one line ending, empty lines are yielded
  * so line numbers match the file, and a final line ending doesn't add an empty line. Rejects if the stream
- * errors.
+ * errors, including with `ENOENT` for a missing file and `EISDIR` for a directory.
  */
 export function readLines(
   _stream: NodeJS.ReadableStream,
