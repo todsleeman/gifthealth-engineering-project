@@ -87,10 +87,8 @@ No mutable state is held at module level, only constants. Each run makes its own
 Income is $5 for each net fill, minus $1 for each return (`FILL_INCOME` and `RETURN_PENALTY`, private to
 `pharmacy.ts`).
 
-`Pharmacy` keeps two private maps, both keyed by patient and then drug: `#patients` holds each created
-prescription's fill and return counts, and `#discardedFills` counts fills discarded before `created` that no
-return has used up yet, so a later return of one of them is discarded too rather than rejected. Only
-`#patients` reaches `summaries()`.
+`Pharmacy` keeps one private map, `#patients`, keyed by patient and then drug, holding each created
+prescription's fill and return counts. Fills and returns before `created` are never stored.
 
 ### Rejections
 
