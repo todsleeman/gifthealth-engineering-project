@@ -51,7 +51,7 @@ Reasons and alternatives are in `docs/plans/scaffolding.md`.
 | #   | Decision                                                                                                                                                                                                                                   | Why                                                                                                                                                                                                                              | Status                                       |
 | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
 | F1  | Branch `functionality` from `master`; the agent pushes it and opens a PR against `master`, and doesn't merge                                                                                                                               | Tod's request, 2026-11-25                                                                                                                                                                                                        | Tod                                          |
-| F2  | Acceptance setup: `vitest.config.ts` names a global setup, `tests/global-setup.ts`, that runs `npm run build` once before any test, and fixtures live in `tests/fixtures/` (spec sample input, its expected output, the two-error example) | The acceptance tests run `dist/cli.js`, so a stale build would test old code. Building once keeps the suite fast. Agreed before this plan (handoff)                                                                              | Tod                                          |
+| F2  | Acceptance setup: `vitest.config.ts` names a global setup, `tests/global-setup.ts`, that runs `npm run build` once before any test, and fixtures live in `tests/fixtures/` (spec sample input, its expected output, the two-error example) | The acceptance tests run `dist/cli.js`, so a stale build would test old code. Building once keeps the suite fast. Agreed with Tod before this plan                                                                               | Tod                                          |
 | F3  | `readLines` closes the readline interface and destroys the stream when reading stops, whether at the end or early                                                                                                                          | The run stops at the first rejected line (S23), so the file stream must not be left open                                                                                                                                         | Agent, approved by Tod, 2026-11-25           |
 | F4  | Tests compare `Money` through `format()`                                                                                                                                                                                                   | `Money` has no equality method, and comparing Dinero objects structurally would test the library's internals                                                                                                                     | Agent, approved by Tod, 2026-11-25           |
 | F5  | `Pharmacy` keeps fills discarded before `created` in a second private Map, `#discardedFills`, keyed patient then drug, separate from `#patients` (reversed by F15)                                                                         | S24 needs a count for prescriptions that may never be created. Keeping it out of `#patients` means those patients never reach `summaries()`, and `Prescription` stays `{ fills, returns }`                                       | Agent                                        |
@@ -101,7 +101,7 @@ the input`.
 12. **Verify** (below), then add an Outcome section to this plan with the results, the final decisions and
     anything left open. Commit: `docs(plans): close functionality plan`.
 13. **Push and open the PR** against `master`, with the deviation list in its body. Don't merge.
-14. **Finish List doc.** Tick the functionality and docs items, link the PR, mark PR #2 merged, and tick the
+14. **Tod's tracking checklist.** Tick the functionality and docs items, link the PR, mark PR #2 merged, and tick the
     Housekeeping item about deleting the `scaffolding` branch.
 15. **Tod.** Review the PR and its deviations, then merge it yourself.
 
@@ -109,8 +109,8 @@ Out of scope: the submission scan of `docs/plans/` and AGENTS.md, the zip, and t
 
 ## Verification
 
-- `npm run check` exits 0 on the default Node and `npm test` exits 0 on Node 22.22.1
-  (`PATH=~/.nvm/versions/node/v22.22.1/bin:$PATH npm test`).
+- `npm run check` exits 0 on the default Node and `npm test` exits 0 with Node 22.22.1
+  first on `PATH`.
 - `npx rx-report tests/fixtures/spec-sample.txt` and `cat tests/fixtures/spec-sample.txt | npx rx-report` print
   exactly the spec's expected output and exit 0.
 - `npx rx-report tests/fixtures/two-errors.txt` prints only `line 4: expected 3 fields, found 2` on stderr,
@@ -143,7 +143,7 @@ Each entry says what the plan said, what was done and why.
    `tests/global-setup.ts`. Why: each describes code this plan added.
 7. **Income constants unexported** (S17 said "`FILL_INCOME` and `RETURN_PENALTY` stay exported"). Built:
    both are private to `pharmacy.ts`. Why: S17's only reason was that lint rejects unused private constants,
-   and the rules now use them. The handoff asked for this, but S17 as written didn't.
+   and the rules now use them. Tod asked for this before the plan, but S17 as written didn't.
 8. **`Money` API** (the architecture plan and the stubs: `zero`, `plus`, `minus`, `times`). Built: `subtract`
    and `multiply` (F10, Tod's review on PR #3). `zero` and `plus` (renamed `add`) are removed because nothing
    uses them (F17).

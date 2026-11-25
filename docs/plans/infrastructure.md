@@ -29,7 +29,7 @@ I4 and I10 are recorded together in the README's Design Tradeoffs section (step 
 
 ## Implementation steps (for the agent; Tod monitors)
 
-0. Save two project memories (memory dir, plus MEMORY.md pointers): (a) output order of the report is
+0. Save two items to the agent's working notes, outside the repo: (a) output order of the report is
    undecided; the sample matches fills descending then name ascending; discuss with Tod before the app
    plan. (b) Deferred: the spec-sample acceptance test (built CLI as a child process, file argument and
    stdin, byte-for-byte, build before test) is the first step of the app plan; at submission, decide
@@ -83,7 +83,7 @@ typescript-eslint prettier eslint-config-prettier`? Versions will be the current
 
 ## Verification
 
-- From a fresh `git clone` into the scratchpad: `npm ci` succeeds and creates `dist/cli.js`.
+- From a fresh `git clone` into a temporary folder: `npm ci` succeeds and creates `dist/cli.js`.
 - `npm run typecheck` and `npm run lint` are clean.
 - `npm start` runs the stub and exits 0.
 - `npm test` starts Vitest. It reports no test files and exits non-zero, which is expected until the app

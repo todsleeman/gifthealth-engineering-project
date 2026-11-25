@@ -56,7 +56,7 @@ fields, found 4`. That is accurate but may confuse. An `empty-field` reason coul
 - **Usage text wording.** `USAGE` is a stub. The exact text is written with its test.
 - **Error message for an unreadable file.** The wording of the stderr line for a missing file or a directory
   is written with its test.
-- The spec-sample acceptance test is still the first test to turn red (memory: deferred work).
+- The spec-sample acceptance test is still the first test to turn red.
 - At submission, whether the zip ships git history.
 
 ## Implementation steps (for the agent; Tod reviews before merge)
@@ -93,7 +93,7 @@ The agent runs these without stopping. Tod's part is at the end, reviewing the P
 - `npm test` lists only todo tests and exits 0.
 - `npx rx-report < /dev/null` fails with "not implemented", as expected on this branch.
 - `grep -rl dinero.js src` lists only `src/money.ts`.
-- A fresh `git clone --branch scaffolding` into the scratchpad runs `npm ci` successfully.
+- A fresh `git clone --branch scaffolding` into a temporary folder runs `npm ci` successfully.
 
 ## Outcome (2026-11-24)
 
@@ -106,7 +106,7 @@ Verification:
 - `npm test` exits 0 with 7 test files skipped and 94 todo tests. Vitest treats todo-only files as passing.
 - `npx rx-report < /dev/null` exits 1 with `Error: not implemented`, as expected.
 - `grep -rl dinero.js src` lists only `src/money.ts`.
-- A fresh `git clone --branch scaffolding` into the scratchpad runs `npm ci` and `npm test`, both exit 0.
+- A fresh `git clone --branch scaffolding` into a temporary folder runs `npm ci` and `npm test`, both exit 0.
 - `master` (22dcc48) and `architecture` (32f71e3) are unchanged.
 
 Changes from the instructions for this branch:

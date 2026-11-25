@@ -76,9 +76,8 @@ acceptance tests (F2).
 
 ## Implementation steps (for the agent; Tod monitors)
 
-0. **Memory.** In the project memory directory, delete `output-order-undecided.md` and its `MEMORY.md` line
-   (settled, A10). In `deferred-work.md`, remove the command-name item (settled, A20) and update its
-   `MEMORY.md` hook.
+0. **Agent notes.** In the agent's working notes, outside the repo, drop the output-order item (settled, A10) and
+   the command-name item (settled, A20).
 1. **Branch.** `git switch -c architecture` from `master` (Tod, 2026-11-24). All commits in this plan go on this
    branch; never push, and leave merging to Tod. Then copy this plan to `docs/plans/architecture.md`. Commit:
    `docs(plans): add architecture plan`.
@@ -138,7 +137,7 @@ codes`, `docs(readme): record architecture and assumptions`.
 ## Verification
 
 - `git branch --show-current` is `architecture`; `master` is unchanged; nothing pushed.
-- From a fresh `git clone` into the scratchpad: `npm ci` succeeds and builds `dist/cli.js`.
+- From a fresh `git clone` into a temporary folder: `npm ci` succeeds and builds `dist/cli.js`.
 - `npm run typecheck` and `npm run lint` are clean.
 - `npx rx-report < /dev/null` runs the empty `main` and exits 0.
 - `grep -rl "dinero.js" src` lists only `src/money.ts`.
@@ -237,7 +236,6 @@ Changes from the plan:
 - `Money.zero` is a static getter, so it can be a stub.
 - `eslint.config.js` gained `argsIgnorePattern: "^_"` for the stub parameters, as the plan allowed.
 - Installing Dinero.js also let npm drop two optional dev-only lockfile entries (`@emnapi/core`, `@emnapi/runtime`).
-- The settled output-order memory was moved to the memory folder's `_quarantine_2026-11-24/`, not deleted.
 - README Project Structure lists `tests/`, which the functionality plan creates.
 
 Still deferred: everything under "Deferred to the functionality plan" above, starting with the acceptance test.
