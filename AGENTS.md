@@ -30,7 +30,7 @@ Decisions and reasons: `docs/plans/infrastructure.md`.
 
 ## Architecture
 
-Module map and types: `docs/architecture.md`. Decisions (A1-A24), rejected options and what is deferred:
+Module map and types: `docs/architecture.md`. Decisions (A1-A24) and rejected options:
 `docs/plans/architecture.md`.
 
 - `src/types.ts` holds the domain types the core modules share, with the `EVENT_KINDS` list `EventKind` is built
