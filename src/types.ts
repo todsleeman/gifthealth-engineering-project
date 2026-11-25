@@ -1,4 +1,4 @@
-import type { Money } from "./money.js";
+import type { Money } from "./helpers/money.js";
 
 /** The event names the input can hold, matched exactly, case included. */
 export const EVENT_KINDS = ["created", "filled", "returned"] as const;

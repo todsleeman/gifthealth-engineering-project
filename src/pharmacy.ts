@@ -1,4 +1,4 @@
-import { Money } from "./money.js";
+import { Money } from "./helpers/money.js";
 import type {
   DrugName,
   PatientName,

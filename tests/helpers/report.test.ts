@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { Money } from "../src/money.js";
+import { Money } from "../../src/helpers/money.js";
 import {
   compareSummaries,
   formatReport,
   formatSummary,
-} from "../src/report.js";
-import type { PatientSummary } from "../src/types.js";
+} from "../../src/helpers/report.js";
+import type { PatientSummary } from "../../src/types.js";
 
 function summary(
   patient: string,

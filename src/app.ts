@@ -1,7 +1,7 @@
-import { parseLine } from "./events.js";
-import { chooseInput, openInput, readLines } from "./input.js";
+import { parseLine } from "./helpers/events.js";
+import { chooseInput, openInput, readLines } from "./helpers/input.js";
 import { Pharmacy } from "./pharmacy.js";
-import { formatReport } from "./report.js";
+import { formatReport } from "./helpers/report.js";
 import { EVENT_KINDS, type Rejection } from "./types.js";
 
 /** `Success`: the report was printed. `NoReport`: it wasn't, and stderr says why. */
