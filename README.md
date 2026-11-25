@@ -2,7 +2,56 @@
 
 ## Overview
 
+`rx-report` is a command-line tool that reads a pharmacy's prescription events and prints, for each patient, how
+many fills they have and how much income those fills brought in. It is written in TypeScript and runs on Node.js
+22 or later. It reads the file named on the command line, or stdin if no file is given.
+
+The brief asks for production-quality code on a small problem, so most of the effort went into keeping the rules
+in one place, testing each one, and writing down every choice the spec leaves open. This README covers how to
+run it, how the code is organized and why, the assumptions I made, and what I would change next.
+
 ## Problem Summary
+
+The input has one event per line, in the order the events happened. Each line has three fields separated by
+spaces, the patient's name, the drug's name and the event. There are three events.
+
+- **created.** The prescription now exists. Fills and returns that came before it are discarded.
+- **filled.** The prescription was filled. It can be filled any number of times, and each fill earns $5.
+- **returned.** An earlier fill was returned. The return cancels that fill, so its $5 no longer counts, and it
+  costs a further $1. The $1 stays lost even if the prescription is filled again later.
+
+The report prints one line per patient with their total fills and total income. Here is the spec's sample.
+
+```
+Nick A created
+Mark B created
+Mark B filled
+Mark C filled
+Mark B returned
+John E created
+Mark B filled
+Mark B filled
+Paul D filled
+John E filled
+John E returned
+```
+
+It produces this report.
+
+```
+Mark: 2 fills $9 income
+John: 0 fills -$1 income
+Nick: 0 fills $0 income
+```
+
+Mark's prescription C was never created, so its fill is discarded. Prescription B has three fills and one return,
+which leaves 2 fills worth $10, less $1 for the return. Paul's only event is a fill with no created, so he isn't
+in the report at all. Nick was created but never filled, so he shows zeros.
+
+The spec leaves several things open, including the order of the report, what identifies a prescription when the
+input has no prescription number, and what to do with a line that doesn't fit the format. The choices I made are
+in [Assumptions](#assumptions), and the handling of bad input is in
+[Error Handling and Edge Cases](#error-handling-and-edge-cases).
 
 ## Getting Started
 
