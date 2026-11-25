@@ -44,16 +44,19 @@ Module map and types: `docs/architecture.md`. Decisions (A1-A24), rejected optio
   order they happen, so skipping a line would change the history later lines are applied to.
 - Exit codes: 0 report printed, 1 no report (a rejected line, a usage error or unreadable input) (S18).
 
-Function outline and the proposed decisions that resolved the architecture plan's deferred items (S1-S18):
+Function outline and the decisions that resolved the architecture plan's deferred items (S1-S24):
 `docs/plans/scaffolding.md`. Tod reviewed them on 2026-11-25: all accepted, some changed (the plan's Review section).
+How they were built, decisions F1-F8 and the deviations from that plan: `docs/plans/functionality.md`.
 
 - `src/cli.ts` is the entry point only. `run(args, io)` lives in `src/app.ts`, so tests import it and pass fake
   streams. Don't import `cli.ts` in tests: importing it starts the CLI.
-- Every function starts as a stub whose TSDoc is its contract, and every test starts as an `it.todo` named after
-  the spec rule. The functionality plan turns each `it.todo` into a failing test, sees it fail, then implements
-  the stub until it passes.
-- Test files must not import `pharmacy.ts` before `Money` is implemented: its income constants call
-  `Money.dollars` when the module loads.
+- Each function's TSDoc is its full contract. Change the behaviour and its TSDoc and test together, test first.
+- `Pharmacy` keeps `#patients` (created prescriptions, `{ fills, returns }`) and `#discardedFills` (fills
+  discarded before `created` and not yet used up by a return). Only `#patients` reaches `summaries()`.
+- `readLines` destroys its stream when reading stops, so the early stop at a rejected line releases the file.
+- A usage error prints `rx-report: <what was wrong>` and then `USAGE`.
+- Acceptance tests (`tests/cli.test.ts`) run the built `dist/cli.js`. `tests/global-setup.ts` builds it once
+  before any test. Inputs and expected output are in `tests/fixtures/`.
 
 ## Done means
 
