@@ -150,6 +150,18 @@ describe("returned", () => {
     expect(totals(pharmacy)).toEqual([["Mark", 0, "$0"]]);
   });
 
+  it("a return cancels a fill made after created before it uses up a fill discarded before created, and costs $1", () => {
+    const pharmacy = pharmacyAfter(
+      "Mark B filled",
+      "Mark B created",
+      "Mark B filled",
+      "Mark B returned",
+    );
+    expect(totals(pharmacy)).toEqual([["Mark", 0, "-$1"]]);
+    expect(pharmacy.apply(event("Mark B returned"))).toBeUndefined();
+    expect(totals(pharmacy)).toEqual([["Mark", 0, "-$1"]]);
+  });
+
   it("a second return after that is still rejected, as one discarded fill accounts for one return", () => {
     const pharmacy = pharmacyAfter(
       "Mark B filled",
