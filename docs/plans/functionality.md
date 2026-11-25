@@ -48,16 +48,17 @@ Reasons and alternatives are in `docs/plans/scaffolding.md`.
 
 ## Decisions
 
-| #   | Decision                                                                                                                                                                                                                                   | Why                                                                                                                                                                                        | Status |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ |
-| F1  | Branch `functionality` from `master`; the agent pushes it and opens a PR against `master`, and doesn't merge                                                                                                                               | Tod's request, 2026-11-25                                                                                                                                                                  | Tod    |
-| F2  | Acceptance setup: `vitest.config.ts` names a global setup, `tests/global-setup.ts`, that runs `npm run build` once before any test, and fixtures live in `tests/fixtures/` (spec sample input, its expected output, the two-error example) | The acceptance tests run `dist/cli.js`, so a stale build would test old code. Building once keeps the suite fast. Agreed before this plan (handoff)                                        | Tod    |
-| F3  | `readLines` closes the readline interface and destroys the stream when reading stops, whether at the end or early                                                                                                                          | The run stops at the first rejected line (S23), so the file stream must not be left open                                                                                                   | Agent  |
-| F4  | Rejected-line tests and pharmacy tests compare `Money` through `format()`                                                                                                                                                                  | `Money` has no equality method, and comparing Dinero objects structurally would test the library's internals                                                                               | Agent  |
-| F5  | `Pharmacy` keeps fills discarded before `created` in a second private Map, `#discardedFills`, keyed patient then drug, separate from `#patients`                                                                                           | S24 needs a count for prescriptions that may never be created. Keeping it out of `#patients` means those patients never reach `summaries()`, and `Prescription` stays `{ fills, returns }` | Agent  |
-
-Further decisions made while building are added here as F6 onwards, and any that change what the plan said are
-also listed under Deviations.
+| #   | Decision                                                                                                                                                                                                                                   | Why                                                                                                                                                                                                             | Status |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| F1  | Branch `functionality` from `master`; the agent pushes it and opens a PR against `master`, and doesn't merge                                                                                                                               | Tod's request, 2026-11-25                                                                                                                                                                                       | Tod    |
+| F2  | Acceptance setup: `vitest.config.ts` names a global setup, `tests/global-setup.ts`, that runs `npm run build` once before any test, and fixtures live in `tests/fixtures/` (spec sample input, its expected output, the two-error example) | The acceptance tests run `dist/cli.js`, so a stale build would test old code. Building once keeps the suite fast. Agreed before this plan (handoff)                                                             | Tod    |
+| F3  | `readLines` closes the readline interface and destroys the stream when reading stops, whether at the end or early                                                                                                                          | The run stops at the first rejected line (S23), so the file stream must not be left open                                                                                                                        | Agent  |
+| F4  | Tests compare `Money` through `format()`                                                                                                                                                                                                   | `Money` has no equality method, and comparing Dinero objects structurally would test the library's internals                                                                                                    | Agent  |
+| F5  | `Pharmacy` keeps fills discarded before `created` in a second private Map, `#discardedFills`, keyed patient then drug, separate from `#patients`                                                                                           | S24 needs a count for prescriptions that may never be created. Keeping it out of `#patients` means those patients never reach `summaries()`, and `Prescription` stays `{ fills, returns }`                      | Agent  |
+| F6  | A usage error writes `rx-report: ` and what was wrong (`no file given and stdin is a terminal`, or `expected at most one file, got 2 arguments`), then `USAGE`. The reason is `InputSource`'s `message`, set by `chooseInput`              | `InputSource` already carries a message, and the user should learn which mistake they made. `chooseInput` can't return `USAGE` itself: `app.ts` imports `input.ts`, so importing `USAGE` back would be circular | Agent  |
+| F7  | `Money.dollars` accepts a whole number only if its value in cents is a safe integer                                                                                                                                                        | Dinero.js stores cents. A dollar amount near `Number.MAX_SAFE_INTEGER` is a safe integer, but times 100 it isn't, and would be stored inexactly                                                                 | Agent  |
+| F8  | Two tests beyond the outline: `readLines` destroys the stream when the caller stops early, and the README's two-error example reports line 10 once line 4 is fixed                                                                         | The first checks F3 (without the destroy call, a stream left by `break` stays open). The second checks a claim the README makes                                                                                 | Agent  |
+| F9  | `describeRejection` builds `created, filled or returned` from `EVENT_KINDS`                                                                                                                                                                | The message and the parser's check can't drift apart, the same reason `EventKind` is built from the list                                                                                                        | Agent  |
 
 ## Implementation steps (for the agent; Tod reviews the PR)
 
@@ -109,4 +110,46 @@ Out of scope: the submission scan of `docs/plans/` and AGENTS.md, the zip, and t
 
 ## Deviations from the plan
 
-Filled in while building. Each entry says what the plan said, what was done and why.
+Each entry says what the plan said, what was done and why.
+
+1. **Usage error text** (S20, `run`'s contract). The plan: a usage error writes `USAGE` to stderr. Built: a line
+   `rx-report: <what was wrong>` first, then `USAGE` (F6). Why: `InputSource`'s usage error already carries a
+   message that would otherwise go unused, and it tells the user which of the two mistakes they made.
+2. **`Money.dollars` range** (its contract: "Throws a `RangeError` unless `amount` is a safe integer"). Built:
+   also throws when the amount in cents isn't a safe integer (F7). Why: Dinero.js stores cents, so a large but
+   safe dollar amount would be stored inexactly. The test for "amounts too large to be exact" uses
+   `Number.MAX_SAFE_INTEGER` dollars.
+3. **`readLines` closes its stream** (its contract said nothing about closing). Built: it closes the readline
+   interface and destroys the stream when reading stops, at the end, on an error or early (F3). Why: readline
+   leaves its input open when the caller stops early, and the run stops at the first rejected line.
+4. **Two tests beyond the outline** (the outline had 98 `it.todo` entries; there are now 100 tests). Added the
+   early-close test for `readLines` and the README's "fixing it reports line 10" claim (F8).
+5. **`vitest.config.ts` added to `tsconfig.json`'s `include`**. The plan named the config file but not this. Why:
+   so the type check and the type-aware lint cover it, as they cover `src/` and `tests/`.
+6. **README additions beyond the checks the plan listed.** Error Handling now shows the usage output, Data
+   Structures describes the discarded-fills count, and Project Structure lists `tests/fixtures/` and
+   `tests/global-setup.ts`. Why: each describes code this plan added.
+
+## Outcome (2026-11-25)
+
+Steps 1 to 12 done on branch `functionality`. Steps 13 (PR) and 14 (Finish List doc) follow this commit, and
+step 15 is Tod's review.
+
+Verification:
+
+- `npm run check` exits 0 on Node 25.2.0. `npm test` exits 0 on Node 22.22.1. 100 tests pass on both.
+- `npx rx-report tests/fixtures/spec-sample.txt` and `cat tests/fixtures/spec-sample.txt | npx rx-report` exit 0
+  and their stdout is byte for byte `tests/fixtures/spec-sample.expected.txt` (checked with `cmp`).
+- `npx rx-report tests/fixtures/two-errors.txt` prints only `line 4: expected 3 fields, found 2` on stderr,
+  nothing on stdout, and exits 1.
+- A missing file prints `rx-report: ENOENT: no such file or directory, open 'events.txt'`, a directory
+  `rx-report: EISDIR: illegal operation on a directory, read`, both exit 1. Two arguments and a terminal on
+  stdin print the reason and `USAGE`, exit 1. Empty input prints nothing, exit 0.
+- A bad first line followed by 2 million good lines stops in under 50 ms, from a file and from a pipe.
+- No plan decision IDs in `src/` or `tests/`. Only `src/money.ts` imports Dinero.js.
+
+Each module's tests were run and seen to fail on "not implemented" before the module was built. The acceptance
+tests stayed red from their commit until `run` was built.
+
+Nothing in this plan is open. Still out of scope: the submission scan of `docs/plans/` and AGENTS.md, the zip,
+and the S6 walkthrough.
