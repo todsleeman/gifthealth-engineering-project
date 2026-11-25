@@ -335,9 +335,11 @@ Reads prescription events from file, or from stdin if no file is given.
   because that is all the input carries. Two patients with the same name would be merged, and a new
   prescription for the same drug (for example after the refills run out) can't be told apart from the old one.
   A real system would key events on a patient ID and a prescription number.
-- **Prices with cents or another currency.** Prices are whole US dollars today. Money is stored in cents through
-  Dinero.js, so a price like $4.50 or a second currency is a change inside money.ts, plus a decision on how the
-  report prints it.
+- **Prices with cents or another currency.** Prices are whole US dollars today, but money is already stored in
+  cents through Dinero.js, so a price like $4.56 changes only money.ts. `Money.dollars` would accept up to two
+  decimal places and round to whole cents, which also corrects floating-point error (in JavaScript, 4.56 × 100
+  is 455.99999999999994), and `format` would print the cents. A second currency is a change there too, plus a
+  decision on how the report prints it.
 - **Sort option.** The report order is fixed (fills, then name). A flag such as `--sort income` would let a
   reader choose. It would be the first option the CLI takes, and the point to reconsider a small argument parser
   instead of reading process.argv by hand.
