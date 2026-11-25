@@ -300,17 +300,15 @@ There are three levels.
 ## AI Usage
 
 I built this with Claude Code as a pair programmer. The agent wrote most of the code, the tests and the first
-drafts of the docs. I decided what to build, made the calls the spec leaves open, and reviewed every change before
-it merged. My name is on every line, so I wanted to understand all of it before it went in.
+drafts of the docs. I decided what to build and made the calls the spec leaves open. I read and understood every
+change before it merged.
 
-The work went in five steps, in this order. Each step had a written plan that I agreed before the agent started,
+The work went in four steps, in this order. Each step had a written plan that I agreed before the agent started,
 and each plan's decision table says who made each call, me or the agent with my approval. The plans are in
 [docs/plans/](docs/plans/), and [AGENTS.md](AGENTS.md) is the standing brief the agent worked from.
 
-- **Infrastructure.** The toolchain came before any app code, so the first line of logic was already type-checked,
-  linted and tested. I chose Vitest over Jest, and pinned the type check to Node 22 even though I develop on 25. The
-  agent proved the pin with a probe file (`RegExp.escape`, from ES2025, fails the type check and
-  `Object.groupBy`, from ES2024, passes).
+- **Infrastructure.** The toolchain came before any app code, so the first line of logic was already type-checked
+  and linted. I chose Vitest over Jest, and pinned the type check to Node 22 even though I develop on 25.
 - **Architecture.** Modules, types and the open questions in the spec. This is where I overruled the agent most. It
   proposed a hand-written money class, splitting on any run of whitespace, always printing "fills" and always
   exiting 0. I chose Dinero.js, strict single spaces, "1 fill" and a failing exit code for bad input. The
@@ -318,18 +316,18 @@ and each plan's decision table says who made each call, me or the agent with my 
   `skipLibCheck` would leave it unchecked, so it is `types.ts`. The options I turned down are kept in the plan.
 - **Scaffolding.** Every function as a stub with its TSDoc contract, and every test as an `it.todo` named after the
   rule it checks (98 of them). The agent marked its own answers to the open questions as proposals, and I
-  reviewed each one before merging. I changed five, and added the rule that one bad line stops the report.
-- **Testing.** The acceptance tests on the built CLI went in first and stayed red until `run` was built. Each
-  module's tests were run and seen to fail before the module was written. The tests are the spec in a form the
-  agent can't talk its way around.
-- **Functionality.** The agent built one module at a time against the tests. A second agent, with none of the
+  reviewed each one before merging, changed four, and added the rule that one bad line stops the report.
+- **Functionality.** The acceptance tests on the built CLI went in first and stayed red until `run` was built.
+  Then the agent built one module at a time, and each module's tests were run and seen to fail before it was
+  written. The tests are the spec in a form the agent can't talk its way around. A second agent, with none of the
   first session's context, then reviewed the pull request against the spec and this README. It found real bugs,
   such as a byte order mark at the start of a file becoming part of the first patient's name. A last review asked
-  only what could be removed, and I took out two unused money methods and a platform-specific error handler.
+  only what could be removed, and I took out two unused money methods and a handler for a closed output pipe
+  that the review had added.
 
 Some things I kept for myself. Every rule in [Assumptions](#assumptions) is my reading of the spec, and where the
-agent and I read it differently, my reading is what the tests check. The README is in my words. The agent drafted
-parts of it, and I rewrote or cut what didn't sound like me or repeated another section.
+agent and I read it differently, my reading is what the tests check. The agent drafted parts of the README, and I
+rewrote or cut what didn't sound like me or repeated another section.
 
 ## Future Improvements
 
