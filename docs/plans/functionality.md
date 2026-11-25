@@ -62,7 +62,7 @@ Reasons and alternatives are in `docs/plans/scaffolding.md`.
 | F10 | `Money`'s arithmetic is `add`, `subtract` and `multiply`, not `plus`, `minus` and `times`                                                                                                                                                  | Tod's PR review: the clearer words for money                                                                                                                                                                    | Tod    |
 | F11 | `Money.multiply` throws a `RangeError` for a count that isn't whole                                                                                                                                                                        | Its contract said the count must be whole, and `dollars` already enforces its own rule. Found by the fresh-context review                                                                                       | Agent  |
 | F12 | A return cancels a fill made after `created` before it uses up a fill discarded before `created`, pinned by a test and stated in the README                                                                                                | The code already did this, but no test failed when the order was swapped. When it could be either, the return counts and costs $1. Found by the fresh-context review                                            | Agent  |
-| F13 | `cli.ts` ignores `EPIPE` on stdout, so `rx-report file \| head -1` ends quietly with the run's exit code                                                                                                                                   | Without it, the closed pipe crashed with an unhandled error and a stack trace. Found by the fresh-context review                                                                                                | Agent  |
+| F13 | `cli.ts` ignores `EPIPE` and `ENOTCONN` on stdout, so `rx-report file \| head -1` ends quietly with the run's exit code                                                                                                                    | Without it, the closed pipe crashed with an unhandled error and a stack trace. Found by the fresh-context review                                                                                                | Agent  |
 | F14 | `readLines` drops a byte order mark at the very start of the input                                                                                                                                                                         | Some Windows editors add one, and it became part of the first patient's name, so that patient didn't match later lines. Found by the fresh-context review                                                       | Agent  |
 
 ## Implementation steps (for the agent; Tod reviews the PR)
@@ -141,8 +141,8 @@ Each entry says what the plan said, what was done and why.
    `subtract`, `multiply` (F10). Why: Tod's review on PR #3.
 9. **`Money.multiply` enforces a whole count** (its contract only said the count must be whole). Built: it
    throws a `RangeError` otherwise (F11).
-10. **Closing stdout early** (the plan didn't cover a reader that stops early). Built: `EPIPE` on stdout is
-    ignored, so `| head -1` ends quietly (F13). An acceptance test covers it.
+10. **Closing stdout early** (the plan didn't cover a reader that stops early). Built: `EPIPE` and `ENOTCONN` on
+    stdout are ignored, so `| head -1` ends quietly (F13). An acceptance test covers it.
 11. **Byte order mark** (the line format assumption didn't cover it). Built: one at the very start of the input
     is dropped (F14), with tests, and the README's Line format assumption says so.
 12. **Smaller review fixes.** The return-order test (F12), the `readLines` TSDoc now says only a Node
