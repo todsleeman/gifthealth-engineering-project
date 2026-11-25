@@ -25,6 +25,9 @@ export const USAGE = [
   "Reads prescription events from file, or from stdin if no file is given.",
 ].join("\n");
 
+/** The event names as a list in words: `created, filled or returned`. */
+const KNOWN_EVENTS = `${EVENT_KINDS.slice(0, -1).join(", ")} or ${EVENT_KINDS.at(-1)}`;
+
 /**
  * Runs rx-report once.
  *
@@ -91,9 +94,6 @@ function applyLine(line: string, pharmacy: Pharmacy): Rejection | undefined {
   }
   return parsed.ok ? pharmacy.apply(parsed.event) : parsed.rejection;
 }
-
-/** The event names as a list in words: `created, filled or returned`. */
-const KNOWN_EVENTS = `${EVENT_KINDS.slice(0, -1).join(", ")} or ${EVENT_KINDS.at(-1)}`;
 
 function reasonText(rejection: Rejection): string {
   switch (rejection.reason) {
