@@ -1,3 +1,7 @@
+import { createReadStream } from "node:fs";
+import { createInterface } from "node:readline";
+import { Readable } from "node:stream";
+
 export type InputSource =
   | { readonly kind: "file"; readonly path: string }
   | { readonly kind: "stdin" }
@@ -9,13 +13,30 @@ export type ReadableSource = Exclude<InputSource, { kind: "usage-error" }>;
  * Where to read events from.
  *
  * One argument is a file, whatever is on stdin. No argument means stdin, unless stdin is a terminal, which is a
- * usage error so the command doesn't sit waiting for input. More than one argument is a usage error.
+ * usage error so the command doesn't sit waiting for input. More than one argument is a usage error. A usage
+ * error's message says what was wrong, without a line ending.
  */
 export function chooseInput(
-  _args: readonly string[],
-  _stdinIsTTY: boolean,
+  args: readonly string[],
+  stdinIsTTY: boolean,
 ): InputSource {
-  throw new Error("not implemented");
+  const [path, ...rest] = args;
+  if (rest.length > 0) {
+    return {
+      kind: "usage-error",
+      message: `expected at most one file, got ${args.length} arguments`,
+    };
+  }
+  if (path !== undefined) {
+    return { kind: "file", path };
+  }
+  if (stdinIsTTY) {
+    return {
+      kind: "usage-error",
+      message: "no file given and stdin is a terminal",
+    };
+  }
+  return { kind: "stdin" };
 }
 
 /**
@@ -23,19 +44,30 @@ export function chooseInput(
  * a missing file or a directory surfaces as an error from `readLines` before any line is yielded.
  */
 export function openInput(
-  _source: ReadableSource,
-  _stdin: NodeJS.ReadableStream,
+  source: ReadableSource,
+  stdin: NodeJS.ReadableStream,
 ): NodeJS.ReadableStream {
-  throw new Error("not implemented");
+  return source.kind === "file" ? createReadStream(source.path) : stdin;
 }
 
 /**
  * The stream's lines in order, without line endings. `\r\n` counts as one line ending, empty lines are yielded
  * so line numbers match the file, and a final line ending doesn't add an empty line. Rejects if the stream
  * errors, including with `ENOENT` for a missing file and `EISDIR` for a directory.
+ *
+ * Once reading stops, at the end of the stream, on an error, or because the caller stopped iterating early,
+ * the stream is destroyed so an open file is released.
  */
-export function readLines(
-  _stream: NodeJS.ReadableStream,
+export async function* readLines(
+  stream: NodeJS.ReadableStream,
 ): AsyncIterable<string> {
-  throw new Error("not implemented");
+  const lines = createInterface({ input: stream, crlfDelay: Infinity });
+  try {
+    yield* lines;
+  } finally {
+    lines.close();
+    if (stream instanceof Readable) {
+      stream.destroy();
+    }
+  }
 }
