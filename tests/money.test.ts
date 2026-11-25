@@ -22,26 +22,26 @@ describe("Money arithmetic", () => {
     expect(Money.zero.format()).toBe("$0");
   });
 
-  it("plus adds two amounts", () => {
-    expect(Money.dollars(5).plus(Money.dollars(4)).format()).toBe("$9");
+  it("add adds two amounts", () => {
+    expect(Money.dollars(5).add(Money.dollars(4)).format()).toBe("$9");
   });
 
-  it("minus subtracts and can go below zero", () => {
-    expect(Money.dollars(5).minus(Money.dollars(1)).format()).toBe("$4");
-    expect(Money.dollars(1).minus(Money.dollars(2)).format()).toBe("-$1");
+  it("subtract subtracts and can go below zero", () => {
+    expect(Money.dollars(5).subtract(Money.dollars(1)).format()).toBe("$4");
+    expect(Money.dollars(1).subtract(Money.dollars(2)).format()).toBe("-$1");
   });
 
-  it("times multiplies by a count", () => {
-    expect(Money.dollars(5).times(3).format()).toBe("$15");
-    expect(Money.dollars(5).times(0).format()).toBe("$0");
+  it("multiply multiplies by a count", () => {
+    expect(Money.dollars(5).multiply(3).format()).toBe("$15");
+    expect(Money.dollars(5).multiply(0).format()).toBe("$0");
   });
 
   it("returns new amounts and leaves the originals unchanged", () => {
     const five = Money.dollars(5);
     const one = Money.dollars(1);
-    five.plus(one);
-    five.minus(one);
-    five.times(3);
+    five.add(one);
+    five.subtract(one);
+    five.multiply(3);
     expect(five.format()).toBe("$5");
     expect(one.format()).toBe("$1");
   });

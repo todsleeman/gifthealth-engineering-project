@@ -31,18 +31,18 @@ export class Money {
     return new Money(dinero({ amount: cents, currency: USD }));
   }
 
-  /** A new amount, this plus `other`. */
-  plus(other: Money): Money {
+  /** A new amount, `other` added to this. */
+  add(other: Money): Money {
     return new Money(add(this.value, other.value));
   }
 
-  /** A new amount, this minus `other`. May be negative. */
-  minus(other: Money): Money {
+  /** A new amount, `other` subtracted from this. May be negative. */
+  subtract(other: Money): Money {
     return new Money(subtract(this.value, other.value));
   }
 
-  /** A new amount, this times `count`, which must be a whole number. */
-  times(count: number): Money {
+  /** A new amount, this multiplied by `count`, which must be a whole number. */
+  multiply(count: number): Money {
     return new Money(multiply(this.value, count));
   }
 

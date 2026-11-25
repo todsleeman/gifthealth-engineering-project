@@ -95,8 +95,8 @@ export class Pharmacy {
         returns += prescription.returns;
       }
       const netFills = fills - returns;
-      const income = FILL_INCOME.times(netFills).minus(
-        RETURN_PENALTY.times(returns),
+      const income = FILL_INCOME.multiply(netFills).subtract(
+        RETURN_PENALTY.multiply(returns),
       );
       return { patient, netFills, income };
     });
