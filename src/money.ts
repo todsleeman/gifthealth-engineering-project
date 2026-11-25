@@ -41,8 +41,13 @@ export class Money {
     return new Money(subtract(this.value, other.value));
   }
 
-  /** A new amount, this multiplied by `count`, which must be a whole number. */
+  /** A new amount, this multiplied by `count`. Throws a `RangeError` unless `count` is a whole number. */
   multiply(count: number): Money {
+    if (!Number.isInteger(count)) {
+      throw new RangeError(
+        `expected a whole number to multiply by, got ${count}`,
+      );
+    }
     return new Money(multiply(this.value, count));
   }
 
