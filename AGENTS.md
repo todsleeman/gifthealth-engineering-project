@@ -46,11 +46,10 @@ Module map and types: `docs/architecture.md`. Decisions (A1-A24), rejected optio
 
 Function outline and the decisions that resolved the architecture plan's deferred items (S1-S24):
 `docs/plans/scaffolding.md`. Tod reviewed them on 2026-11-25: all accepted, some changed (the plan's Review section).
-How they were built, decisions F1-F14 and the deviations from that plan: `docs/plans/functionality.md`.
+How they were built, decisions F1-F18 and the deviations from that plan: `docs/plans/functionality.md`.
 
 - `src/cli.ts` is the entry point only. `run(args, io)` lives in `src/app.ts`, so tests import it and pass fake
-  streams. Don't import `cli.ts` in tests: importing it starts the CLI. Besides starting `run`, it only ignores `EPIPE` and
-  `ENOTCONN` on stdout, so a reader that closes early (`| head -1`) ends the run quietly.
+  streams. Don't import `cli.ts` in tests: importing it starts the CLI.
 - Each function's TSDoc is its full contract. Change the behaviour and its TSDoc and test together, test first.
 - `Pharmacy` keeps only `#patients` (created prescriptions, `{ fills, returns }`). Fills and returns before
   `created` are never stored, so a return after `created` can only cancel a fill made after it (Tod reversed S24
