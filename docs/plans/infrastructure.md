@@ -25,6 +25,11 @@ scope: the app plan starts with the spec's sample as its first acceptance test.
 
 I9 was amended by architecture plan A21 (2026-11-24): no unnecessary runtime dependencies; dinero.js approved.
 
+I4's Node version reason (here and in the step 6 draft) is wrong: Node strips types by default from 22.18, not
+23.6. The decision stands for three other reasons. Node 22.0 to 22.17 can't run `.ts` files, and the floor is
+Node 22. Type stripping deletes types without checking them, while the build fails on a type error. The source
+imports `.js` paths (I3), which type stripping doesn't map to `.ts` files.
+
 I4 and I10 are recorded together in the README's Design Tradeoffs section (step 6). The rest stay in this plan and AGENTS.md.
 
 ## Implementation steps (for the agent; Tod monitors)
