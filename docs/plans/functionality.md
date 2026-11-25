@@ -37,7 +37,7 @@ Reasons and alternatives are in `docs/plans/scaffolding.md`.
 | S14 | Pharmacy rejection messages: `prescription Mark B already created`, `Mark B returned with no fill to cancel`       |
 | S15 | Ties in net fills sort by name with `localeCompare(b, "en")`                                                       |
 | S16 | Tests start as `it.todo`, one file per module plus `cli.test.ts`                                                   |
-| S17 | `FILL_INCOME` and `RETURN_PENALTY` become unexported once the rules use them                                       |
+| S17 | `FILL_INCOME` and `RETURN_PENALTY` stay exported; built differently (deviation 7)                                  |
 | S18 | Exit codes 0 (report printed) and 1 (no report); its reading part is replaced by S23                               |
 | S19 | Extra spaces make empty fields, which count: `Mark  B filled` has 4 fields                                         |
 | S20 | `USAGE` is `usage: rx-report [file]` and `Reads prescription events from file, or from stdin if no file is given.` |
@@ -59,6 +59,11 @@ Reasons and alternatives are in `docs/plans/scaffolding.md`.
 | F7  | `Money.dollars` accepts a whole number only if its value in cents is a safe integer                                                                                                                                                        | Dinero.js stores cents. A dollar amount near `Number.MAX_SAFE_INTEGER` is a safe integer, but times 100 it isn't, and would be stored inexactly                                                                 | Agent  |
 | F8  | Two tests beyond the outline: `readLines` destroys the stream when the caller stops early, and the README's two-error example reports line 10 once line 4 is fixed                                                                         | The first checks F3 (without the destroy call, a stream left by `break` stays open). The second checks a claim the README makes                                                                                 | Agent  |
 | F9  | `describeRejection` builds `created, filled or returned` from `EVENT_KINDS`                                                                                                                                                                | The message and the parser's check can't drift apart, the same reason `EventKind` is built from the list                                                                                                        | Agent  |
+| F10 | `Money`'s arithmetic is `add`, `subtract` and `multiply`, not `plus`, `minus` and `times`                                                                                                                                                  | Tod's PR review: the clearer words for money                                                                                                                                                                    | Tod    |
+| F11 | `Money.multiply` throws a `RangeError` for a count that isn't whole                                                                                                                                                                        | Its contract said the count must be whole, and `dollars` already enforces its own rule. Found by the fresh-context review                                                                                       | Agent  |
+| F12 | A return cancels a fill made after `created` before it uses up a fill discarded before `created`, pinned by a test and stated in the README                                                                                                | The code already did this, but no test failed when the order was swapped. When it could be either, the return counts and costs $1. Found by the fresh-context review                                            | Agent  |
+| F13 | `cli.ts` ignores `EPIPE` on stdout, so `rx-report file \| head -1` ends quietly with the run's exit code                                                                                                                                   | Without it, the closed pipe crashed with an unhandled error and a stack trace. Found by the fresh-context review                                                                                                | Agent  |
+| F14 | `readLines` drops a byte order mark at the very start of the input                                                                                                                                                                         | Some Windows editors add one, and it became part of the first patient's name, so that patient didn't match later lines. Found by the fresh-context review                                                       | Agent  |
 
 ## Implementation steps (for the agent; Tod reviews the PR)
 
@@ -73,7 +78,7 @@ dependencies. Then it asks Tod and waits.
    `feat(money): implement whole-dollar money`.
 4. **parseLine.** Same for `tests/events.test.ts` and `src/events.ts`. Commit: `feat(events): parse event lines`.
 5. **Pharmacy.** Same for `tests/pharmacy.test.ts` and `src/pharmacy.ts`, with `#patients` (S6), `#discardedFills`
-   (F5) and the income constants unexported (S17). Commit: `feat(pharmacy): apply the prescription rules`.
+   (F5) and the income constants unexported (deviation 7). Commit: `feat(pharmacy): apply the prescription rules`.
 6. **Report.** Same for `tests/report.test.ts` and `src/report.ts`. Commit: `feat(report): order and format the
 report`.
 7. **Input.** Same for `tests/input.test.ts` and `src/input.ts` (F3). Commit: `feat(input): choose, open and read
@@ -122,22 +127,36 @@ Each entry says what the plan said, what was done and why.
 3. **`readLines` closes its stream** (its contract said nothing about closing). Built: it closes the readline
    interface and destroys the stream when reading stops, at the end, on an error or early (F3). Why: readline
    leaves its input open when the caller stops early, and the run stops at the first rejected line.
-4. **Two tests beyond the outline** (the outline had 98 `it.todo` entries; there are now 100 tests). Added the
+4. **Two tests beyond the outline** (the outline had 98 `it.todo` entries; there were 100 tests before the review fixes, 105 after). Added the
    early-close test for `readLines` and the README's "fixing it reports line 10" claim (F8).
 5. **`vitest.config.ts` added to `tsconfig.json`'s `include`**. The plan named the config file but not this. Why:
    so the type check and the type-aware lint cover it, as they cover `src/` and `tests/`.
 6. **README additions beyond the checks the plan listed.** Error Handling now shows the usage output, Data
    Structures describes the discarded-fills count, and Project Structure lists `tests/fixtures/` and
    `tests/global-setup.ts`. Why: each describes code this plan added.
+7. **Income constants unexported** (S17 said "`FILL_INCOME` and `RETURN_PENALTY` stay exported"). Built:
+   both are private to `pharmacy.ts`. Why: S17's only reason was that lint rejects unused private constants,
+   and the rules now use them. The handoff asked for this, but S17 as written didn't.
+8. **`Money` method names** (the architecture plan and the stubs: `plus`, `minus`, `times`). Built: `add`,
+   `subtract`, `multiply` (F10). Why: Tod's review on PR #3.
+9. **`Money.multiply` enforces a whole count** (its contract only said the count must be whole). Built: it
+   throws a `RangeError` otherwise (F11).
+10. **Closing stdout early** (the plan didn't cover a reader that stops early). Built: `EPIPE` on stdout is
+    ignored, so `| head -1` ends quietly (F13). An acceptance test covers it.
+11. **Byte order mark** (the line format assumption didn't cover it). Built: one at the very start of the input
+    is dropped (F14), with tests, and the README's Line format assumption says so.
+12. **Smaller review fixes.** The return-order test (F12), the `readLines` TSDoc now says only a Node
+    `Readable` is destroyed, `docs/architecture.md` says only constants live at module level, the README
+    says the one argument is always a filename (`-` and `--help` included), `KNOWN_EVENTS` sits next to
+    `USAGE`, and one test title now names only what it checks.
 
 ## Outcome (2026-11-25)
 
-Steps 1 to 12 done on branch `functionality`. Steps 13 (PR) and 14 (Finish List doc) follow this commit, and
-step 15 is Tod's review.
+Steps 1 to 14 done on branch `functionality`, PR #3 open. Step 15 is Tod's review.
 
 Verification:
 
-- `npm run check` exits 0 on Node 25.2.0. `npm test` exits 0 on Node 22.22.1. 100 tests pass on both.
+- `npm run check` exits 0 on Node 25.2.0. `npm test` exits 0 on Node 22.22.1. 105 tests pass on both (100 before the review fixes).
 - `npx rx-report tests/fixtures/spec-sample.txt` and `cat tests/fixtures/spec-sample.txt | npx rx-report` exit 0
   and their stdout is byte for byte `tests/fixtures/spec-sample.expected.txt` (checked with `cmp`).
 - `npx rx-report tests/fixtures/two-errors.txt` prints only `line 4: expected 3 fields, found 2` on stderr,
@@ -153,3 +172,11 @@ tests stayed red from their commit until `run` was built.
 
 Nothing in this plan is open. Still out of scope: the submission scan of `docs/plans/` and AGENTS.md, the zip,
 and the S6 walkthrough.
+
+## Review (2026-11-25)
+
+A fresh-context review agent read the PR against the spec, the README and S1-S24, and Tod left three comments
+on `src/money.ts`. Everything both raised was fixed on this branch as F10-F14 and deviations 7-12. The
+reviewer found no bug in the spec's rules. It noted, and this plan leaves alone: `Money.zero` and
+`Money.add` are used only by tests, and a tab inside a field shows as an invisible character in the
+`unknown event` message, which the single-space rule accepts.
