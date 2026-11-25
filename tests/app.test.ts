@@ -89,7 +89,7 @@ describe("run: one rejected line stops the report", () => {
     expect(stderr).toBe("line 1: expected 3 fields, found 2\n");
   });
 
-  it("stops at the first rule rejection too, so no later event is applied", async () => {
+  it("stops at the first rule rejection too, so a later bad line isn't reported", async () => {
     const { stderr } = await runWith(
       [],
       "Mark B created\nMark B returned\nMark B created\nJohn E cancelled\n",
