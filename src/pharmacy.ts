@@ -7,10 +7,12 @@ import type {
   RuleRejection,
 } from "./types.js";
 
+/** Income from each fill that no return has cancelled. */
 const FILL_INCOME = Money.dollars(5);
+/** The cost of each return, kept even if the prescription is filled again later. */
 const RETURN_PENALTY = Money.dollars(1);
 
-/** A created prescription. Returns never exceed fills. */
+/** A created prescription's counts. Returns never exceed fills. */
 interface Prescription {
   fills: number;
   returns: number;
@@ -30,15 +32,16 @@ export class Pharmacy {
   readonly #discardedFills: ByPrescription<number> = new Map();
 
   /**
-   * Applies one event.
+   * Applies one event. Returns `undefined` when the event was applied or discarded, or a rejection for an
+   * event the spec says can't happen, in which case nothing changes.
    *
-   * Returns `undefined` when the event was applied, or discarded because its prescription hasn't been created
-   * (the spec discards fills and returns before `created`). Returns a `duplicate-created` rejection for a second
-   * `created` of the same patient and drug, leaving the prescription unchanged. A return cancels one fill not yet
-   * cancelled and costs `RETURN_PENALTY`. With no such fill, the return is discarded with no charge if a fill of
-   * this prescription was discarded before `created` and no return has used it yet, since each discarded fill
-   * accounts for one return, before or after `created`. Otherwise it returns a `nothing-to-return` rejection,
-   * with nothing charged.
+   * - `created` creates the prescription with no fills. A second `created` for the same patient and drug is a
+   *   `duplicate-created` rejection.
+   * - `filled` adds one fill, worth $5. Before `created` it is discarded.
+   * - `returned` cancels one fill not yet cancelled and costs $1. Before `created` it is discarded. After
+   *   `created`, a return with no fill left to cancel is also discarded, with no charge, if a fill of this
+   *   prescription was discarded before `created`: each discarded fill accounts for one return, before or
+   *   after `created`. Otherwise it is a `nothing-to-return` rejection.
    */
   apply(event: PrescriptionEvent): RuleRejection | undefined {
     const prescription = this.#patients.get(event.patient)?.get(event.drug);
@@ -81,8 +84,7 @@ export class Pharmacy {
 
   /**
    * One summary per patient with at least one created prescription, in no particular order. Net fills are
-   * fills minus returns across the patient's prescriptions, and income is `FILL_INCOME` times net fills minus
-   * `RETURN_PENALTY` times returns.
+   * fills minus returns across the patient's prescriptions, and income is $5 per net fill less $1 per return.
    */
   summaries(): PatientSummary[] {
     return Array.from(this.#patients, ([patient, prescriptions]) => {

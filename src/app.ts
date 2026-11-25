@@ -4,6 +4,7 @@ import { Pharmacy } from "./pharmacy.js";
 import { formatReport } from "./report.js";
 import { EVENT_KINDS, type Rejection } from "./types.js";
 
+/** `Success`: the report was printed. `NoReport`: it wasn't, and stderr says why. */
 export const ExitCode = {
   Success: 0,
   NoReport: 1,

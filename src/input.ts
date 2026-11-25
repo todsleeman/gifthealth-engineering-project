@@ -2,11 +2,13 @@ import { createReadStream } from "node:fs";
 import { createInterface } from "node:readline";
 import { Readable } from "node:stream";
 
+/** Where to read events from, or why the command was called wrongly. */
 export type InputSource =
   | { readonly kind: "file"; readonly path: string }
   | { readonly kind: "stdin" }
   | { readonly kind: "usage-error"; readonly message: string };
 
+/** An input source that can be opened: a file or stdin. */
 export type ReadableSource = Exclude<InputSource, { kind: "usage-error" }>;
 
 /**
