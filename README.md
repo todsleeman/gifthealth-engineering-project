@@ -82,15 +82,15 @@ npx rx-report events.txt
 cat events.txt | npx rx-report
 ```
 
-The report goes to stdout. Any line that couldn't be used is listed on stderr with its line number.
+The report goes to stdout. If any line can't be used, every such line is listed on stderr with its line number
+and no report is printed.
 
 #### Exit codes
 
-| Code | Meaning                                                                                        |
-| ---- | ---------------------------------------------------------------------------------------------- |
-| 0    | Every line was valid and the report is complete                                                |
-| 1    | The report was printed, but some lines were rejected and skipped. Each one is listed on stderr |
-| 2    | No report was printed. The command was used wrongly or the input couldn't be read              |
+| Code | Meaning                                                                                                                          |
+| ---- | -------------------------------------------------------------------------------------------------------------------------------- |
+| 0    | Every line was valid and the report was printed                                                                                  |
+| 1    | No report was printed. A line was rejected, the command was used wrongly, or the input couldn't be read. The reason is on stderr |
 
 ## Running Tests
 
@@ -133,8 +133,9 @@ decisions behind it, including the options I turned down, are in
 The app reads one line at a time, numbers it and parses it into an event. A line that can't be used goes to
 stderr with its line number. Valid events go through the pharmacy rules as they are read, so the whole file is
 never held in memory. The pharmacy rules hand back a rejection for an event the spec says can't happen, and that
-line is reported the same way. When the input ends, the rules give one summary per patient. The report sorts the
-summaries, formats them and prints them to stdout. The exit code says whether any line was rejected.
+line is reported the same way. Reading carries on after a rejected line, so every one is listed. When the input
+ends, if no line was rejected, the rules give one summary per patient, and the report sorts the summaries,
+formats them and prints them to stdout. If any line was rejected, nothing goes to stdout and the exit code is 1.
 
 Only the app and input modules touch files, stdin or stdout, and the app gets its streams passed in. The rest
 takes values and returns values, which keeps it easy to test and lets it sit behind an HTTP API later.
@@ -198,9 +199,12 @@ behaviour, so it stays in `money.ts`.
   lines are skipped because they hold no event.
 - **Input source.** If a filename is given, the program reads that file and ignores stdin. Otherwise it reads
   stdin.
-- **Malformed lines.** The spec doesn't cover them. A line with the wrong number of fields or an unknown event is
-  skipped and reported, following the spec's own rule of discarding fills and returns before created. See Error
-  Handling and Edge Cases.
+- **One bad line is an error.** The spec says events are recorded in the order they happen, and they are applied
+  in that order, each one to the prescription as the events before it left it. If a line is skipped, that order
+  is changed, and the events after it are applied to a history that didn't happen. For example, a skipped fill
+  makes a later return look like it has nothing to cancel. So a line that can't be used (the wrong number of
+  fields, an unknown event, a second created, or a return with nothing to cancel) is an error: it is listed on
+  stderr, no report is printed, and the command exits with 1. See Error Handling and Edge Cases.
 
 ## Design Tradeoffs
 
@@ -255,14 +259,17 @@ There are three levels.
 
 ## Error Handling and Edge Cases
 
-A malformed line is skipped and the rest of the file is still processed. Each skipped line is written to stderr
-with its line number and the reason, so stdout only ever holds the report and can be piped or saved safely.
-Lines the spec says can't happen (a second created, or a return with no fill to cancel) are handled the same
-way.
+One line that can't be used stops the report. The file is still read to the end, so every bad line is written to
+stderr with its line number and the reason in one run, and nothing is written to stdout. Lines the spec says
+can't happen (a second created, or a return with no fill to cancel) are handled the same way.
 
-A skipped line might belong to a patient, so their fills and income could be wrong. The report is still printed,
-but the command exits with 1 instead of 0. A script that runs the report and then uses it (for example with
-`&&`) stops, unless it chooses to accept a partial report.
+The report can't be trusted once a line is missing. Events build on each other, so a lost line changes what the
+lines after it mean, and a line with the wrong number of fields can't even say which patient it belonged to. A
+report with wrong income that looks right is worse than no report, because it only takes one reader who doesn't
+check the exit code. The cost is that one bad line in a large file blocks the whole report until it is fixed.
+
+A later line can be rejected because of an earlier one. If a fill line is malformed, a return after it has
+nothing to cancel and is listed too.
 
 Here is the spec's sample with two bad lines added, `Mark B` at line 4 and `John E cancelled` at line 10.
 
@@ -270,9 +277,6 @@ Here is the spec's sample with two bad lines added, `Mark B` at line 4 and `John
 $ npx rx-report events.txt
 line 4: expected 3 fields, found 2
 line 10: unknown event "cancelled" (expected created, filled or returned)
-Mark: 2 fills $9 income
-John: 0 fills -$1 income
-Nick: 0 fills $0 income
 $ echo $?
 1
 ```
@@ -280,8 +284,8 @@ $ echo $?
 The input itself can also be a problem.
 
 - An empty file prints nothing and exits 0.
-- A missing or unreadable file, or a directory, prints an error to stderr and exits 2.
-- Running with no filename and nothing piped in prints usage and exits 2, instead of waiting for input.
+- A missing or unreadable file, or a directory, prints an error to stderr and exits 1.
+- Running with no filename and nothing piped in prints usage and exits 1, instead of waiting for input.
 
 ## Future Improvements
 
@@ -300,6 +304,8 @@ The input itself can also be a problem.
 - **Sort option.** The report order is fixed (fills, then name). A flag such as `--sort income` would let a
   reader choose. It would be the first option the CLI takes, and the point to reconsider a small argument parser
   instead of reading process.argv by hand.
+- **Skipping bad lines on request.** A flag such as `--skip-invalid` could print the report anyway, for a reader
+  who accepts that some totals may be wrong. It would need a clear note on stderr that the report is incomplete.
 - **State across runs.** Each run starts with no history, so the input must hold every event from each
   prescription's creation onwards. If events arrived in daily files, a prescription created yesterday and filled
   today would have today's fill discarded. A small database such as SQLite would keep prescriptions between

@@ -39,11 +39,12 @@ Module map and types: `docs/architecture.md`. Decisions (A1-A24), rejected optio
   skip checking a `.d.ts` (A24).
 - Money is a `Money` class around Dinero.js, whole US dollars only; nothing outside `money.ts` imports Dinero (A6, A7).
 - Report order is net fills descending, then name ascending (A10).
-- A malformed line, a second `created` or a return with no fill to cancel is skipped and listed on stderr with
-  its line number; processing continues (A15-A17).
-- Exit codes: 0 complete, 1 report printed but lines rejected, 2 no report (A18).
+- A malformed line, a second `created` or a return with no fill to cancel is an error: every one is listed on
+  stderr with its line number, and no report is printed (S18, replacing A15 and A18). Events are applied in the
+  order they happen, so skipping a line would change the history later lines are applied to.
+- Exit codes: 0 report printed, 1 no report (a rejected line, a usage error or unreadable input) (S18).
 
-Function outline and the proposed decisions that resolved the architecture plan's deferred items (S1-S17):
+Function outline and the proposed decisions that resolved the architecture plan's deferred items (S1-S18):
 `docs/plans/scaffolding.md`. Proposed decisions need Tod's OK before the `scaffolding` branch is merged.
 
 - `src/cli.ts` is the entry point only. `run(args, io)` lives in `src/app.ts`, so tests import it and pass fake

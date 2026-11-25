@@ -49,17 +49,17 @@ built test-first in the functionality plan.
 ## Data flow
 
 1. `cli.ts` calls `run` with the arguments and the process's stdin, stdout and stderr.
-2. `run` asks `chooseInput` for the file or stdin. A usage error goes to stderr and the exit code is 2.
-3. `openInput` opens the input. If it can't be read, the error goes to stderr and the exit code is 2.
+2. `run` asks `chooseInput` for the file or stdin. A usage error goes to stderr and the exit code is 1.
+3. `openInput` opens the input. If it can't be read, the error goes to stderr and the exit code is 1.
 4. `run` reads the lines with `readLines`, numbering them from 1, empty lines included.
 5. Each line goes through `parseLine`. An empty line is skipped. A rejected line is numbered and written to
-   stderr straight away with `describeRejection`.
+   stderr straight away with `describeRejection`, and reading carries on so every rejected line is listed.
 6. Each event goes to `Pharmacy.apply`, one at a time, as it is read. When it returns a rejection (a second
    `created`, or a return with no fill to cancel), that line is reported the same way.
-7. Once the input ends, `Pharmacy.summaries` gives one summary per patient with a created prescription.
-8. `formatReport` sorts the summaries with `compareSummaries` and formats each with `formatSummary`. `run`
-   writes the lines to stdout.
-9. The exit code is 1 if any line was rejected, otherwise 0.
+7. Once the input ends, if any line was rejected, nothing goes to stdout and the exit code is 1 (S18).
+8. Otherwise `Pharmacy.summaries` gives one summary per patient with a created prescription, and `formatReport`
+   sorts them with `compareSummaries` and formats each with `formatSummary`. `run` writes the lines to stdout
+   and the exit code is 0.
 
 Nothing is held at module level. Each run makes its own `Pharmacy`, so tests and runs never share state.
 
@@ -78,7 +78,7 @@ Nothing is held at module level. Each run makes its own `Pharmacy`, so tests and
 | `PatientSummary`    | `types.ts` | One patient's name, net fills (fills minus returns) and income                                        |
 | `InputSource`       | `input.ts` | A file path, stdin, or a usage error with its message                                                 |
 | `Io`                | `app.ts`   | The stdin, stdout and stderr `run` uses                                                               |
-| `ExitCode`          | `app.ts`   | 0, 1 or 2 (below)                                                                                     |
+| `ExitCode`          | `app.ts`   | 0 or 1 (below)                                                                                        |
 
 Income is $5 for each net fill, minus $1 for each return (`FILL_INCOME` and `RETURN_PENALTY` in `pharmacy.ts`).
 
@@ -93,11 +93,13 @@ Income is $5 for each net fill, minus $1 for each return (`FILL_INCOME` and `RET
 
 ## Exit codes
 
-| Code | Meaning                                                                            |
-| ---- | ---------------------------------------------------------------------------------- |
-| 0    | Every line was valid and the report is complete                                    |
-| 1    | The report was printed, but some lines were rejected. Each one is listed on stderr |
-| 2    | No report was printed. The command was used wrongly or the input couldn't be read  |
+| Code | Meaning                                                                                                 |
+| ---- | ------------------------------------------------------------------------------------------------------- |
+| 0    | Every line was valid and the report was printed                                                         |
+| 1    | No report was printed. A line was rejected, the command was used wrongly, or the input couldn't be read |
+
+One rejected line stops the report (S18): events are applied in the order they happen, so skipping a line would
+change the history every later line for that prescription is applied to.
 
 ## Still open
 
