@@ -84,6 +84,20 @@ describe("readLines", () => {
     ]);
   });
 
+  it("drops a byte order mark at the start of the input, which some Windows editors add", async () => {
+    expect(await linesOf("\uFEFFNick A created\nMark B created\n")).toEqual([
+      "Nick A created",
+      "Mark B created",
+    ]);
+    expect(await linesOf("\uFEFF", "Nick A created")).toEqual([
+      "Nick A created",
+    ]);
+  });
+
+  it("keeps a byte order mark anywhere but the start of the input", async () => {
+    expect(await linesOf("a\n\uFEFFb\n")).toEqual(["a", "\uFEFFb"]);
+  });
+
   it("yields empty lines, so line numbers match the file", async () => {
     expect(await linesOf("a\n\nb\n")).toEqual(["a", "", "b"]);
   });
