@@ -36,6 +36,11 @@ describe("Money arithmetic", () => {
     expect(Money.dollars(5).multiply(0).format()).toBe("$0");
   });
 
+  it("multiply throws a RangeError for a count that isn't a whole number, such as 1.5", () => {
+    expect(() => Money.dollars(5).multiply(1.5)).toThrow(RangeError);
+    expect(() => Money.dollars(5).multiply(Number.NaN)).toThrow(RangeError);
+  });
+
   it("returns new amounts and leaves the originals unchanged", () => {
     const five = Money.dollars(5);
     const one = Money.dollars(1);
