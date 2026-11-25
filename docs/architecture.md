@@ -32,20 +32,20 @@ I/O types out of the domain file. `Money` is a class with its own behaviour, so 
 Each function's TSDoc comment in `src/` states its full behaviour. Each was built test-first, and its tests in
 `tests/` are named after the spec rule or assumption they check.
 
-| Module        | Function                                                         | Returns                                                                              |
-| ------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| `app.ts`      | `run(args, io)`                                                  | The exit code, after writing the report to stdout and rejections to stderr           |
-| `app.ts`      | `describeRejection(lineNumber, rejection)`                       | The stderr message for one rejected line                                             |
-| `input.ts`    | `chooseInput(args, stdinIsTTY)`                                  | A file, stdin, or a usage error                                                      |
-| `input.ts`    | `openInput(source, stdin)`                                       | The file's stream or stdin, without checking the file first                          |
-| `input.ts`    | `readLines(stream)`                                              | The stream's lines, one at a time, without line endings; closes the stream when done |
-| `events.ts`   | `parseLine(line)`                                                | An event, a rejection, or `undefined` for an empty line                              |
-| `pharmacy.ts` | `new Pharmacy()`, `apply(event)`                                 | `undefined` when applied or discarded, or a rejection                                |
-| `pharmacy.ts` | `summaries()`                                                    | One `PatientSummary` per patient with a created prescription                         |
-| `report.ts`   | `compareSummaries(a, b)`                                         | The report order, for sorting                                                        |
-| `report.ts`   | `formatSummary(summary)`                                         | One report line                                                                      |
-| `report.ts`   | `formatReport(summaries)`                                        | All report lines in report order                                                     |
-| `money.ts`    | `Money.dollars`, `zero`, `add`, `subtract`, `multiply`, `format` | Whole-dollar amounts and their text, such as `-$1`                                   |
+| Module        | Function                                          | Returns                                                                              |
+| ------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `app.ts`      | `run(args, io)`                                   | The exit code, after writing the report to stdout and rejections to stderr           |
+| `app.ts`      | `describeRejection(lineNumber, rejection)`        | The stderr message for one rejected line                                             |
+| `input.ts`    | `chooseInput(args, stdinIsTTY)`                   | A file, stdin, or a usage error                                                      |
+| `input.ts`    | `openInput(source, stdin)`                        | The file's stream or stdin, without checking the file first                          |
+| `input.ts`    | `readLines(stream)`                               | The stream's lines, one at a time, without line endings; closes the stream when done |
+| `events.ts`   | `parseLine(line)`                                 | An event, a rejection, or `undefined` for an empty line                              |
+| `pharmacy.ts` | `new Pharmacy()`, `apply(event)`                  | `undefined` when applied or discarded, or a rejection                                |
+| `pharmacy.ts` | `summaries()`                                     | One `PatientSummary` per patient with a created prescription                         |
+| `report.ts`   | `compareSummaries(a, b)`                          | The report order, for sorting                                                        |
+| `report.ts`   | `formatSummary(summary)`                          | One report line                                                                      |
+| `report.ts`   | `formatReport(summaries)`                         | All report lines in report order                                                     |
+| `money.ts`    | `Money.dollars`, `subtract`, `multiply`, `format` | Whole-dollar amounts and their text, such as `-$1`                                   |
 
 ## Data flow
 

@@ -1,5 +1,4 @@
 import {
-  add,
   dinero,
   multiply,
   subtract,
@@ -14,11 +13,6 @@ const CENTS_PER_DOLLAR = 100;
 export class Money {
   private constructor(private readonly value: Dinero<number>) {}
 
-  /** $0. */
-  static get zero(): Money {
-    return Money.dollars(0);
-  }
-
   /**
    * `amount` whole dollars. Throws a `RangeError` unless `amount` is a whole number small enough that its value
    * in cents is a safe integer, so it is stored exactly.
@@ -29,11 +23,6 @@ export class Money {
       throw new RangeError(`expected a whole number of dollars, got ${amount}`);
     }
     return new Money(dinero({ amount: cents, currency: USD }));
-  }
-
-  /** A new amount, `other` added to this. */
-  add(other: Money): Money {
-    return new Money(add(this.value, other.value));
   }
 
   /** A new amount, `other` subtracted from this. May be negative. */
