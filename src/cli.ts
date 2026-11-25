@@ -1,9 +1,12 @@
 #!/usr/bin/env node
 import { run } from "./app.js";
 
-// A reader that stops early, such as `| head -1`, closes the pipe. That ends the report, not the run with an error.
+// A reader that closes early, such as `| head -1`, is not an error. Pipes report it as EPIPE, and the sockets
+// Node uses for a child process's stdio on macOS sometimes report it as ENOTCONN.
+const READER_GONE = new Set(["EPIPE", "ENOTCONN"]);
+
 process.stdout.on("error", (error: NodeJS.ErrnoException) => {
-  if (error.code !== "EPIPE") {
+  if (!READER_GONE.has(error.code ?? "")) {
     throw error;
   }
 });
