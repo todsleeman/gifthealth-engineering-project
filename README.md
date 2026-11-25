@@ -117,6 +117,8 @@ src/
   report.ts     report order and line format
   types.ts      the domain types the core modules share
 tests/          mirrors src/, plus cli.test.ts for the built CLI
+  fixtures/     the spec's sample, its expected output and the two-error example below
+  global-setup.ts   builds dist/ once before the tests run
 docs/
   architecture.md   module map, data flow and types
   plans/            the plans this was built from, with every decision and who made it
@@ -147,7 +149,9 @@ takes values and returns values, which keeps it easy to test and lets it sit beh
   type can't drift apart.
 - **Prescriptions.** A prescription is a patient and a drug. The pharmacy rules keep prescriptions grouped by
   patient, so building the report is one pass over each patient's prescriptions. Each prescription stores only
-  its fill and return counts (see Design Tradeoffs).
+  its fill and return counts (see Design Tradeoffs). Fills discarded before created are counted the same way in
+  a separate map, so a later return of one of them can be discarded too, and patients who only appear there
+  never reach the report.
 - **Money.** `Money` is a small class around Dinero.js. It stores integer cents and only works in whole dollars
   today. Keeping money in its own type means it can't be added to a fill count by mistake.
 - **Summaries.** Each patient's summary holds their name, net fills and income. The field is `netFills` because
@@ -293,6 +297,8 @@ There are three levels.
   goes to stdout and stderr, the line numbers in error messages, and the exit codes, without starting a real process.
 - **Acceptance tests on the built CLI.** These run `dist/cli.js` as a child process with the spec's sample,
   once as a file argument and once through stdin, and compare stdout with the expected output byte for byte.
+  They also run the two-error example below and a missing file. Vitest builds `dist/` once before any test
+  runs, so these never test a stale build. The inputs and the expected output are files in `tests/fixtures/`.
 
 ## Error Handling and Edge Cases
 
@@ -315,7 +321,15 @@ The input itself can also be a problem.
 - An empty file prints nothing and exits 0.
 - A missing or unreadable file, or a directory, prints Node's error to stderr and exits 1, for example
   `rx-report: ENOENT: no such file or directory, open 'events.txt'`.
-- Running with no filename and nothing piped in prints usage and exits 1, instead of waiting for input.
+- Running with no filename and nothing piped in prints what was wrong and the usage, and exits 1, instead of
+  waiting for input. More than one filename is handled the same way.
+
+```
+$ npx rx-report
+rx-report: no file given and stdin is a terminal
+usage: rx-report [file]
+Reads prescription events from file, or from stdin if no file is given.
+```
 
 ## Future Improvements
 
