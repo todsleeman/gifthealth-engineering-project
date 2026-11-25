@@ -274,8 +274,9 @@ which they couldn't do if importing it started the CLI.
 ### Tooling
 
 - **Compiled to JavaScript rather than run as TypeScript**
-  - Runs on Node 22 (current oldest LTS) with nothing extra installed.
-  - Node can strip types from .ts files, but that skips the type check. Compiling means the type check has to
+  - Runs on every Node 22 release (current oldest LTS) with nothing extra installed. Node only runs .ts files
+    directly from 22.18.
+  - Running .ts files directly deletes the types without checking them. Compiling means the type check has to
     pass before there is a CLI to run.
   - TypeScript is set to Node 22, so it flags anything Node 22 doesn't have.
 - **`npm ci` instead of `npm install`**
