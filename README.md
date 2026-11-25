@@ -161,16 +161,10 @@ takes values and returns values, which keeps it easy to test and lets it sit beh
 
 ### Code Organization
 
-Each module owns one part of the problem. `events.ts` knows the input format, `pharmacy.ts` knows the spec's
-rules, `report.ts` knows the output format, `input.ts` knows where the lines come from, and `app.ts` connects them.
-All the spec's business rules, income included, are in `pharmacy.ts`.
-
-`cli.ts` only starts `run` with the real process streams. Keeping `run` in its own module means tests can import
-it and call it with fake streams, which they couldn't do if importing it started the CLI.
-
-The domain types the core modules share are in `types.ts`, so the whole data model reads in one file. Types for
-the edge of the program, like the exit codes, stay with the code that uses them. `Money` is a class with its own
-behaviour, so it stays in `money.ts`.
+Each module owns one part of the problem (see Project Structure), and all the spec's business rules, income
+included, are in `pharmacy.ts`. `cli.ts` only starts `run` with the real process streams. Keeping `run` in its own
+module means tests can import it and call it with fake streams, which they couldn't do if importing it started
+the CLI.
 
 ## Assumptions
 
@@ -188,8 +182,6 @@ behaviour, so it stays in `money.ts`.
 - **Who appears in the report.** A patient is listed only if at least one of their prescriptions was created.
   Paul's only event is a fill with no created, so he is missing from the sample output. Nick was created but
   never filled, so he shows zeros.
-- **Returns.** A return cancels one fill and costs $1. Mark has three fill events and one return in the sample,
-  which gives 2 fills and $9.
 - **A return needs a fill to cancel.** The spec says a return cancels a prior fill and always has one. A return
   is only applied if the prescription has a fill that hasn't already been cancelled. A return with nothing to
   cancel is rejected and reported like a malformed line, with no fill cancelled and no $1 charged. This covers a
