@@ -198,7 +198,9 @@ behaviour, so it stays in `money.ts`.
 - **Events before created.** Fills and returns before created are discarded for good. A later created starts the
   prescription from zero. A return after created whose fill was one of those discarded fills is discarded with
   it, with no fill cancelled and no $1 charged, rather than rejected: the spec's prior fill did happen, it just
-  doesn't count. Each discarded fill accounts for one return, and a return before created uses one up too.
+  doesn't count. Each discarded fill accounts for one return, and a return before created uses one up too. A return
+  cancels a fill made after created first, and only uses up a discarded fill when no such fill is left, so
+  when it could be either, the return counts and costs $1.
 - **Names.** Patient and drug names can be any text without spaces. The sample's single letters read as
   placeholders. Names and event names match exactly, including case, so mark and Mark are different patients
   and Filled is an unknown event.
